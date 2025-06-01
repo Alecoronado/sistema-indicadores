@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuración de la URL de la API
-// Forzar uso de Railway para pruebas
+// Usar HTTPS para evitar Mixed Content errors
 const API_URL = 'https://sistema-indicadores-production.up.railway.app/api';
 
 console.log('🔗 API URL configurada:', API_URL);
