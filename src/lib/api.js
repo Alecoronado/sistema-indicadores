@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api';
+// Configuración de la URL de la API
+// Forzar uso de Railway para pruebas
+const API_URL = 'https://sistema-indicadores-production.up.railway.app/api';
+
+console.log('🔗 API URL configurada:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -8,6 +12,18 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor para manejar errores
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('Error en API:', error);
+    if (error.code === 'ECONNREFUSED') {
+      console.error('❌ No se puede conectar al backend. Verifica que esté corriendo.');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const indicadoresApi = {
   // Obtener todos los indicadores

@@ -15,11 +15,19 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models.indicador import Indicador, Hito
-from app.database import Base, SQLALCHEMY_DATABASE_URL
+from app.database import Base
+
+# URL de Railway (sobreescribe la configuración local)
+RAILWAY_DATABASE_URL = "postgresql://postgres:SebbswpwOADbtpbKnPDKncNWmCQnlMBU@gondola.proxy.rlwy.net:22198/railway"
 
 def crear_session():
-    """Crear sesión de base de datos"""
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    """Crear sesión de base de datos usando Railway"""
+    print(f"🔗 Conectando a Railway...")
+    engine = create_engine(RAILWAY_DATABASE_URL)
+    
+    # Crear tablas si no existen
+    Base.metadata.create_all(bind=engine)
+    
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     return SessionLocal(), engine
 
@@ -41,7 +49,7 @@ def convertir_fecha(fecha_valor):
 
 def main():
     print("=" * 50)
-    print("📖 Cargando datos reales con fechas específicas por hito...")
+    print("📖 Cargando datos reales a Railway...")
     
     try:
         # Leer Excel
@@ -57,6 +65,7 @@ def main():
             print("✅ Fecha corregida automáticamente")
         
         session, engine = crear_session()
+        print("✅ Conectado a Railway!")
         
         print("🗑️  Limpiando datos existentes...")
         session.query(Hito).delete()
@@ -125,7 +134,7 @@ def main():
         
         session.commit()
         
-        print(f"\n🎉 ¡DATOS CARGADOS CON FECHAS ESPECÍFICAS!")
+        print(f"\n🎉 ¡DATOS CARGADOS EN RAILWAY!")
         print(f"📊 Total indicadores: {total_indicadores}")
         print(f"🎯 Total hitos: {total_hitos}")
         
@@ -139,6 +148,7 @@ def main():
                 print(f"  {hito.nombreHito}: {hito.fechaInicioHito} → {hito.fechaFinalizacionHito}")
         
         session.close()
+        print("🚀 ¡Ya puedes verificar los datos en Railway!")
         
     except Exception as e:
         print(f"❌ Error: {e}")

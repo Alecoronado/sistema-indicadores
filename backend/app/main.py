@@ -19,7 +19,10 @@ allowed_origins = [
     "http://localhost:5173", 
     "http://localhost:5174",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174"
+    "http://127.0.0.1:5174",
+    # Permitir Vercel y otros servicios de hosting
+    "https://*.vercel.app",
+    "https://*.netlify.app",
 ]
 
 # Si estamos en producción, agregar orígenes adicionales
@@ -27,9 +30,11 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 if FRONTEND_URL:
     allowed_origins.append(FRONTEND_URL)
 
-# Para desarrollo, permitir cualquier origen local
-if os.getenv("ENVIRONMENT") == "development":
-    allowed_origins.append("*")
+# Para desarrollo, permitir cualquier origen HTTPS
+allowed_origins.extend([
+    "https://sistema-indicadores-frontend.vercel.app",
+    "https://sistema-indicadores.vercel.app"
+])
 
 app.add_middleware(
     CORSMiddleware,
