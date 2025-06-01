@@ -20,6 +20,8 @@ allowed_origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    # URL específica de Vercel del usuario
+    "https://sistema-indicadores-git-main-alessandro-coronados-projects.vercel.app",
     # Permitir Vercel y otros servicios de hosting
     "https://*.vercel.app",
     "https://*.netlify.app",
