@@ -40,8 +40,8 @@ allowed_origins.extend([
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporalmente permisivo para diagnosis
+    allow_credentials=False,  # Debe ser False cuando allow_origins es *
     allow_methods=["*"],
     allow_headers=["*"],
 )
