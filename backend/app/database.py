@@ -12,6 +12,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     # Producción: usar DATABASE_URL directamente
+    # Reemplazar postgresql:// con postgresql+psycopg2:// si es necesario
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URL = DATABASE_URL
     print("🌐 Usando DATABASE_URL de producción")
 else:
@@ -34,13 +37,15 @@ else:
         SQLALCHEMY_DATABASE_URL = "sqlite:///./indicadores.db"
 
 # Crear engine
-if not DATABASE_URL:
+if DATABASE_URL:
+    # Producción
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+else:
+    # Desarrollo
     if "postgresql" in SQLALCHEMY_DATABASE_URL:
         engine = create_engine(SQLALCHEMY_DATABASE_URL)
     else:
         engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

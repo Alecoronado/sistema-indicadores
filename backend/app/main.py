@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import indicadores
 from .database import engine
 from .models import indicador
+import os
 
 # Crear las tablas en la base de datos
 indicador.Base.metadata.create_all(bind=engine)
@@ -13,10 +14,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuración CORS
+# Configuración CORS para desarrollo y producción
+allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174"
+]
+
+# Si estamos en producción, agregar orígenes adicionales
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+
+# Para desarrollo, permitir cualquier origen local
+if os.getenv("ENVIRONMENT") == "development":
+    allowed_origins.append("*")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],  # URLs de tu frontend
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,4 +44,8 @@ app.include_router(indicadores.router, prefix="/api")
 
 @app.get("/")
 def read_root():
-    return {"message": "Bienvenido a la API de Sistema de Indicadores"} 
+    return {"message": "Bienvenido a la API de Sistema de Indicadores"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "message": "API funcionando correctamente"} 
