@@ -17,13 +17,23 @@ from sqlalchemy.orm import sessionmaker
 from app.models.indicador import Indicador, Hito
 from app.database import Base
 
-# URL de Railway (sobreescribe la configuración local)
-RAILWAY_DATABASE_URL = "postgresql://postgres:SebbswpwOADbtpbKnPDKncNWmCQnlMBU@gondola.proxy.rlwy.net:22198/railway"
+def get_database_url():
+    """Obtener URL de base de datos de variable de entorno o usar SQLite local"""
+    database_url = os.getenv("DATABASE_URL")
+    
+    if database_url:
+        print(f"✅ Conectado a PostgreSQL Railway")
+        return database_url
+    else:
+        print(f"✅ Conectado a PostgreSQL local")
+        return "sqlite:///./indicadores.db"
 
 def crear_session():
-    """Crear sesión de base de datos usando Railway"""
-    print(f"🔗 Conectando a Railway...")
-    engine = create_engine(RAILWAY_DATABASE_URL)
+    """Crear sesión de base de datos"""
+    database_url = get_database_url()
+    print(f"🔗 Conectando a base de datos...")
+    
+    engine = create_engine(database_url)
     
     # Crear tablas si no existen
     Base.metadata.create_all(bind=engine)

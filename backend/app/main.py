@@ -14,47 +14,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuración CORS optimizada para Railway
-allowed_origins = [
-    "http://localhost:5173", 
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
-
-# Variables de entorno para Railway
-FRONTEND_URL = os.getenv("FRONTEND_URL")
-RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL") 
-RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
-
-# Agregar URLs de Railway si están disponibles
-if FRONTEND_URL:
-    allowed_origins.append(FRONTEND_URL)
-    
-if RAILWAY_STATIC_URL:
-    allowed_origins.append(f"https://{RAILWAY_STATIC_URL}")
-    
-if RAILWAY_PUBLIC_DOMAIN:
-    allowed_origins.append(f"https://{RAILWAY_PUBLIC_DOMAIN}")
-
-# URLs comunes de Railway
-railway_patterns = [
-    "https://*.railway.app",
-    "https://*.up.railway.app",
-]
-
-# En producción, usar orígenes específicos
+# Configuración CORS simplificada
 if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
-    # Estamos en Railway
+    # Producción en Railway - CORS específico
+    allowed_origins = [
+        "https://*.railway.app",
+        "https://*.up.railway.app",
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=allowed_origins + ["https://sistema-indicadores-frontend-production.up.railway.app"],
+        allow_origins=["*"],  # Temporal para debug
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 else:
-    # Desarrollo local
+    # Desarrollo local - CORS abierto
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -71,7 +49,9 @@ def read_root():
     return {
         "message": "Bienvenido a la API de Sistema de Indicadores",
         "version": "1.0.0",
-        "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME", "development")
+        "status": "running",
+        "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME", "development"),
+        "database_configured": bool(os.getenv("DATABASE_URL"))
     }
 
 @app.get("/health")
@@ -79,5 +59,6 @@ def health_check():
     return {
         "status": "healthy", 
         "message": "API funcionando correctamente",
-        "database": "connected"
+        "database": "connected",
+        "version": "1.0.0"
     } 

@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 
 class HitoBase(BaseModel):
     nombreHito: str
-    fechaInicioHito: datetime
-    fechaFinalizacionHito: datetime
+    fechaInicioHito: date
+    fechaFinalizacionHito: date
     avanceHito: float = 0
     estadoHito: str
     responsableHito: str
@@ -27,8 +27,8 @@ class IndicadorBase(BaseModel):
     area: str
     nombreIndicador: str
     tipoIndicador: str
-    fechaInicioGeneral: datetime
-    fechaFinalizacionGeneral: datetime
+    fechaInicioGeneral: date
+    fechaFinalizacionGeneral: date
     responsableGeneral: str
     responsableCargaGeneral: Optional[str] = None
 
@@ -49,7 +49,7 @@ class IndicadorUpdate(BaseModel):
     area: Optional[str] = None
     nombreIndicador: Optional[str] = None
     tipoIndicador: Optional[str] = None
-    fechaInicioGeneral: Optional[datetime] = None
-    fechaFinalizacionGeneral: Optional[datetime] = None
+    fechaInicioGeneral: Optional[date] = None
+    fechaFinalizacionGeneral: Optional[date] = None
     responsableGeneral: Optional[str] = None
     responsableCargaGeneral: Optional[str] = None 

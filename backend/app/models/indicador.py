@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..database import Base
@@ -11,8 +11,8 @@ class Indicador(Base):
     area = Column(String, index=True)
     nombreIndicador = Column(String, index=True)
     tipoIndicador = Column(String)
-    fechaInicioGeneral = Column(DateTime)
-    fechaFinalizacionGeneral = Column(DateTime)
+    fechaInicioGeneral = Column(Date)
+    fechaFinalizacionGeneral = Column(Date)
     responsableGeneral = Column(String)
     responsableCargaGeneral = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -26,8 +26,8 @@ class Hito(Base):
     id = Column(Integer, primary_key=True, index=True)
     indicador_id = Column(Integer, ForeignKey("indicadores.id"))
     nombreHito = Column(String)
-    fechaInicioHito = Column(DateTime)
-    fechaFinalizacionHito = Column(DateTime)
+    fechaInicioHito = Column(Date)
+    fechaFinalizacionHito = Column(Date)
     avanceHito = Column(Float, default=0)
     estadoHito = Column(String)
     responsableHito = Column(String)
