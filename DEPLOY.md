@@ -10,9 +10,24 @@ Esta guía te llevará paso a paso para desplegar el Sistema de Indicadores en R
 
 ## 🏗️ Estructura de Deployment
 
-El proyecto se despliega como **2 servicios separados**:
-1. **Backend** (FastAPI + PostgreSQL)
-2. **Frontend** (React + Vite)
+El proyecto se despliega como **2 servicios separados** usando una estructura de **monorepo**:
+
+```
+/
+├── frontend/        # 🎨 React + Vite + Tailwind
+│   ├── src/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── ...
+├── backend/         # ⚡ FastAPI + PostgreSQL
+│   ├── app/
+│   ├── requirements.txt
+│   └── ...
+└── README.md
+```
+
+1. **Backend** (FastAPI + PostgreSQL) - `/backend`
+2. **Frontend** (React + Vite) - `/frontend`
 
 ## 🔧 Paso 1: Deploy del Backend
 
@@ -61,7 +76,7 @@ Una vez desplegado, visita:
 
 ### 2.2 Configurar Frontend Service
 
-1. **Root Directory**: `/` (raíz del proyecto)
+1. **Root Directory**: `/frontend` ⭐ **IMPORTANTE: Cambio de estructura**
 2. **Build Command**: `npm run build`
 3. **Start Command**: `npm run start`
 
@@ -192,6 +207,7 @@ Para actualizar el sistema:
 
 ## 💡 Tips de Optimización
 
+- **Monorepo**: Mantén frontend/ y backend/ separados pero en el mismo repositorio
 - **Base de datos**: Railway PostgreSQL incluye backups automáticos
 - **Performance**: El backend usa gunicorn con 4 workers
 - **Caching**: Considera agregar Redis para cache si es necesario

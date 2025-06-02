@@ -9,6 +9,7 @@ echo ║                                                                  ║
 echo ║  📊 Dashboard de Indicadores Empresariales                      ║
 echo ║  📈 Gestión de Hitos y Cronogramas                             ║
 echo ║  📋 Sistema de Seguimiento de Progreso                         ║
+echo ║  🏗️  Estructura Monorepo (frontend/ + backend/)                ║
 echo ╚══════════════════════════════════════════════════════════════════╝
 echo.
 
@@ -22,8 +23,8 @@ if not exist "backend\venv\Scripts\activate.bat" (
     exit /b 1
 )
 
-REM Verificar que existe node_modules
-if not exist "node_modules" (
+REM Verificar que existe node_modules en frontend
+if not exist "frontend\node_modules" (
     echo ❌ Error: Dependencias de frontend no encontradas
     echo 💡 Ejecuta install_dependencies.bat primero
     pause
@@ -45,7 +46,7 @@ timeout /t 3 /nobreak >nul
 
 REM Iniciar Frontend (React)
 echo 🌐 Iniciando Frontend - React en puerto 5173...
-start "Frontend - React" powershell -noexit -command "npm run dev"
+start "Frontend - React" powershell -noexit -command "cd frontend; npm run dev"
 
 echo.
 echo ╔══════════════════════════════════════════════════════════════════╗

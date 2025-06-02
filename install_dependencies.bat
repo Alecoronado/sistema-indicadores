@@ -1,8 +1,8 @@
 @echo off
-echo Instalando dependencias del sistema...
+echo Instalando dependencias del sistema (Monorepo)...
 
 echo.
-echo 1. Instalando dependencias de Python...
+echo 1. Instalando dependencias de Python (Backend)...
 cd backend
 python -m pip install --upgrade pip
 python -m pip install virtualenv
@@ -20,8 +20,8 @@ pip install psycopg2-binary==2.9.9
 pip install alembic==1.12.1
 
 echo.
-echo 2. Instalando dependencias de Node.js...
-cd ..
+echo 2. Instalando dependencias de Node.js (Frontend)...
+cd ..\frontend
 npm install
 npm install axios
 npm install @radix-ui/react-icons
@@ -35,6 +35,10 @@ npm install framer-motion
 
 echo.
 echo Instalación completada!
+echo.
+echo Estructura del proyecto:
+echo   📁 frontend/  - React + Vite + Tailwind
+echo   📁 backend/   - FastAPI + PostgreSQL
 echo.
 echo Ahora puedes ejecutar start.bat para iniciar la aplicación
 echo.

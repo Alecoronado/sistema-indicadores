@@ -1,295 +1,225 @@
 # 🚀 Sistema de Indicadores Horizons
 
-> **Dashboard empresarial para gestión de indicadores, hitos y cronogramas**
+Un sistema completo de gestión de indicadores empresariales con dashboard interactivo y cronograma de hitos.
 
-## 📋 Características Principales
-
-- 📊 **Dashboard Interactivo** - Visualización en tiempo real de indicadores
-- 📈 **Gantt Profesional** - Cronogramas por meses con línea de tiempo actual
-- 🎯 **Gestión de Hitos** - Actualización individual de progreso y estados
-- 📱 **Diseño Responsivo** - Interfaz moderna y adaptable
-- 🔄 **Filtros Jerárquicos** - VP → Área → Indicador para navegación intuitiva
-
-## 🏗️ Estructura del Proyecto
+## 🏗️ Estructura del Proyecto (Monorepo)
 
 ```
-horizons/
-├── 📁 src/                 # Frontend React + Vite
-│   ├── 📁 components/      # Componentes reutilizables
-│   ├── 📁 pages/           # Páginas principales (Dashboard, Gantt, etc.)
-│   ├── 📁 context/         # Estado global de la aplicación
-│   └── 📁 hooks/           # Hooks personalizados
-├── 📁 backend/             # API FastAPI + SQLAlchemy
-│   ├── 📁 app/             # Aplicación principal
-│   ├── cargar_datos.py     # Script de carga de datos
-│   └── analizar_datos.py   # Herramientas de análisis
-├── Base de datos.xlsx      # Datos fuente organizacionales
-├── start.bat              # 🚀 Iniciador automático completo
-└── install_dependencies.bat # 📦 Instalador de dependencias
+/
+├── 📁 frontend/              # 🎨 React + Vite + Tailwind
+│   ├── src/
+│   │   ├── components/       # Componentes React
+│   │   ├── pages/           # Páginas de la aplicación
+│   │   ├── services/        # Servicios API
+│   │   └── utils/           # Utilidades
+│   ├── package.json
+│   ├── vite.config.js
+│   └── tailwind.config.js
+│
+├── 📁 backend/               # ⚡ FastAPI + PostgreSQL
+│   ├── app/
+│   │   ├── api/             # Endpoints API
+│   │   ├── models/          # Modelos SQLAlchemy
+│   │   ├── services/        # Lógica de negocio
+│   │   └── main.py          # Aplicación principal
+│   ├── requirements.txt
+│   └── cargar_datos.py
+│
+├── 📁 docs/                  # 📚 Documentación
+│   ├── DEPLOY.md            # Guía de despliegue
+│   └── railway-checklist.md
+│
+├── start.bat                 # 🚀 Script de inicio
+├── install_dependencies.bat # 📦 Instalador de dependencias
+└── README.md                # 📋 Este archivo
 ```
 
-## ⚡ Inicio Rápido
+## ✨ Características
 
-### 1️⃣ Instalar Dependencias (Solo la primera vez)
+- **📊 Dashboard Interactivo**: Visualización de indicadores en tiempo real
+- **📈 Gantt Chart**: Cronograma visual de hitos y progreso
+- **🎯 Gestión de Indicadores**: CRUD completo de indicadores
+- **🔍 Filtros Avanzados**: Por categoría, estado, responsable
+- **📱 Responsive Design**: Optimizado para desktop y móvil
+- **🔒 API Documentada**: Swagger/OpenAPI integrado
+- **🚀 Deploy en Railway**: Configuración lista para producción
+
+## 🛠️ Tecnologías
+
+### Frontend (`/frontend`)
+- ⚛️ **React 18** - Biblioteca de UI
+- ⚡ **Vite** - Build tool y dev server
+- 🎨 **Tailwind CSS** - Framework de estilos
+- 📊 **Lucide React** - Íconos
+- 🎭 **Framer Motion** - Animaciones
+- 🌐 **Axios** - Cliente HTTP
+
+### Backend (`/backend`)
+- 🐍 **FastAPI** - Framework web moderno
+- 🗄️ **SQLAlchemy** - ORM
+- 🐘 **PostgreSQL** - Base de datos
+- 📝 **Pydantic** - Validación de datos
+- 🔐 **Python-JOSE** - JWT tokens
+- 🔒 **Passlib** - Hash de passwords
+
+## 🚀 Inicio Rápido
+
+### 1. Clonar Repositorio
 ```bash
-install_dependencies.bat
+git clone <tu-repositorio>
+cd sistema-indicadores
 ```
 
-### 2️⃣ Iniciar Sistema Completo
+### 2. Instalar Dependencias
 ```bash
-start.bat
+# Windows
+.\install_dependencies.bat
+
+# Linux/Mac
+chmod +x install_dependencies.sh
+./install_dependencies.sh
 ```
 
-**¡Listo!** El sistema se abrirá automáticamente:
-- 🌐 **Frontend:** http://localhost:5173
-- 📡 **Backend:** http://localhost:8000
-- 📚 **API Docs:** http://localhost:8000/docs
+### 3. Iniciar Aplicación
+```bash
+# Windows
+.\start.bat
 
-## 🌐 Deployment en Producción
+# Linux/Mac  
+chmod +x start.sh
+./start.sh
+```
 
-### **📋 Opciones Recomendadas:**
+### 4. Acceder a la Aplicación
+- 🌐 **Frontend**: http://localhost:5173
+- 📡 **Backend**: http://localhost:8000
+- 📚 **API Docs**: http://localhost:8000/docs
 
-#### **Frontend (React + Vite):**
-- **Vercel** - Deployment automático desde GitHub
-- **Netlify** - Alternativa robusta
-- **GitHub Pages** - Gratuito para proyectos públicos
+## 📦 Instalación Manual
 
-#### **Backend (FastAPI + Python):**
-- **Railway** - Base de datos PostgreSQL incluida
-- **Render** - Plan gratuito disponible
-- **Heroku** - Opción tradicional
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# o
+venv\Scripts\activate     # Windows
 
-#### **Base de Datos:**
-- **Railway PostgreSQL** - Integrado con backend
-- **Supabase** - PostgreSQL managed
-- **ElephantSQL** - PostgreSQL especializado
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
 
-### **🔧 Configuración para Deployment:**
+### Frontend  
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-1. **Clonar repositorio:**
-   ```bash
-   git clone https://github.com/tu-usuario/horizons-indicadores
-   cd horizons-indicadores
-   ```
+## 🗄️ Base de Datos
 
-2. **Frontend (Vercel/Netlify):**
-   ```bash
-   npm install
-   npm run build
-   ```
-
-3. **Backend (Railway/Render):**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn app.main:app --host 0.0.0.0 --port $PORT
-   ```
-
-4. **Variables de entorno:**
-   - Copiar `env.example` y configurar con datos de producción
-   - Configurar `DATABASE_URL` en el servicio de hosting
-
-### **🌍 URLs de Producción:**
-- **Frontend:** https://tu-app.vercel.app
-- **Backend:** https://tu-backend.railway.app
-- **API Docs:** https://tu-backend.railway.app/docs
-
-## 🎯 Páginas Disponibles
-
-### 📊 **Dashboard Principal**
-- Métricas generales de todos los indicadores
-- Filtros por VP y Área
-- Estadísticas en tiempo real
-
-### 📈 **Gantt Profesional** 
-- Vista cronológica por indicador específico
-- Escala temporal por meses
-- Línea roja de "HOY" 
-- Colores por estado de hitos
-
-### ✏️ **Actualizar Indicador**
-- Filtros jerárquicos: VP → Área → Indicador → Hito
-- Actualización individual de hitos
-- Modal de edición intuitivo
-
-### 📋 **Historial de Indicadores**
-- Vista detallada de todos los indicadores
-- Estados y responsables
-- Fechas de inicio y finalización
-- Exportación a Excel
-
-## 🔧 Gestión de Datos
-
-### Cargar Nuevos Datos
+### Cargar Datos Iniciales
 ```bash
 cd backend
 python cargar_datos.py
 ```
 
-### Analizar Estructura de Datos
-```bash
-cd backend
-python analizar_datos.py
-```
-
-## 📊 Datos Organizacionales
-
-El sistema gestiona **14 indicadores únicos** distribuidos en:
-
-- **VPD** (6 indicadores): Alianza Estratégica, Análisis y Estudios Económicos, Efectividad y Desarrollo
-- **VPE** (4 indicadores): TEI, Talento Humano  
-- **PRE** (4 indicadores): Auditoría, Comunicación, Gestión de Riesgos, Legal
-
-**Total:** 83 hitos con estados reales de progreso.
-
-## 🎨 Tecnologías
-
-- **Frontend:** React 18 + Vite + TailwindCSS + Lucide Icons
-- **Backend:** FastAPI + SQLAlchemy + PostgreSQL/SQLite
-- **UI:** shadcn/ui components
-- **Visualización:** Gantt charts personalizados
-- **Exportación:** Excel (XLSX) nativo
-
-## 📝 Licencia
-
-Sistema desarrollado para gestión interna organizacional.
-
----
-
-💡 **Tip:** Usa `diagnosticar.bat` si encuentras problemas de conectividad.
+### Estructura de Datos
+- **Indicadores**: Métricas empresariales
+- **Hitos**: Eventos y fechas importantes
+- **Responsables**: Usuarios asignados
+- **Categorías**: Clasificación de indicadores
 
 ## 🚀 Deploy en Railway
 
-### Backend (FastAPI)
+Consulta la **[Guía de Deploy](DEPLOY.md)** para instrucciones detalladas de despliegue en Railway.
 
-1. **Crear nuevo proyecto en Railway**
-   ```bash
-   # Conecta tu repositorio a Railway
-   # Selecciona la carpeta backend/ como source
-   ```
+### Configuración Rápida
+1. **Backend Service**: Root directory = `/backend`
+2. **Frontend Service**: Root directory = `/frontend`
+3. **Variables de entorno**: `VITE_API_URL` en frontend
 
-2. **Configurar variables de entorno**
-   ```
-   # Railway automáticamente provee:
-   DATABASE_URL=postgresql://...
-   RAILWAY_ENVIRONMENT_NAME=production
-   
-   # Opcional (añadir si necesario):
-   FRONTEND_URL=https://tu-frontend-url.up.railway.app
-   ```
+## 🔧 Desarrollo
 
-3. **Configurar el deployment**
-   - Root Directory: `/backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --host 0.0.0.0 --port $PORT`
+### Scripts Disponibles
 
-### Frontend (React + Vite)
-
-1. **Crear otro proyecto en Railway**
-   ```bash
-   # Conecta el mismo repositorio
-   # Selecciona la carpeta raíz como source
-   ```
-
-2. **Configurar variables de entorno**
-   ```
-   VITE_API_URL=https://tu-backend-url.up.railway.app/api
-   ```
-
-3. **Configurar el deployment**
-   - Build Command: `npm run build`
-   - Start Command: `npm run start`
-   - Root Directory: `/` (raíz del proyecto)
-
-### Datos Iniciales
-
-Después del deployment del backend, cargar los datos:
-
+#### Frontend (`/frontend`)
 ```bash
-# Conectarse al backend via Railway CLI o directamente en la plataforma
-python backend/cargar_datos.py
+npm run dev          # Servidor de desarrollo
+npm run build        # Build para producción
+npm run preview      # Preview del build
+npm run lint         # Linter
 ```
 
-## 🛠️ Desarrollo Local
-
-### Prerrequisitos
-
-- Node.js 18+
-- Python 3.9+
-- PostgreSQL (opcional, usa SQLite como fallback)
-
-### Instalación
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone <tu-repositorio>
-   cd sistema-indicadores
-   ```
-
-2. **Frontend**
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-3. **Backend**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   python -m uvicorn app.main:app --reload
-   ```
-
-4. **Cargar datos (opcional)**
-   ```bash
-   cd backend
-   python cargar_datos.py
-   ```
-
-## 📊 Características
-
-- ✅ Dashboard interactivo con métricas en tiempo real
-- ✅ Gráficos Gantt profesionales para seguimiento de proyectos
-- ✅ Gestión de indicadores por VP y área
-- ✅ Filtrado avanzado por estado, tipo y responsable
-- ✅ Datos reales importados desde Excel
-- ✅ API REST completa con FastAPI
-- ✅ Base de datos PostgreSQL con fallback a SQLite
-- ✅ Deploy optimizado para Railway
-
-## 📈 API Endpoints
-
-- `GET /api/indicadores` - Obtener todos los indicadores
-- `GET /api/indicadores/area/{area}` - Filtrar por área
-- `POST /api/indicadores` - Crear nuevo indicador
-- `PUT /api/indicadores/{id}` - Actualizar indicador
-- `DELETE /api/indicadores/{id}` - Eliminar indicador
-- `GET /api/indicadores/estadisticas/dashboard` - Estadísticas del dashboard
-
-## 💾 Base de Datos
-
-El sistema utiliza PostgreSQL en producción (Railway) con SQLite como fallback para desarrollo local. Los datos incluyen:
-
-- **14 Indicadores** distribuidos por VPs (VPD, VPE, PRE)
-- **83 Hitos** con fechas reales y estados de progreso
-- **Áreas organizacionales** específicas por VP
-- **Estados:** En Progreso, Completado, Por Comenzar
-- **Tipos:** Estratégico, Gestion
-
-## ⚡ Comandos Útiles
-
+#### Backend (`/backend`)
 ```bash
-# Desarrollo completo
-npm run dev                 # Frontend en puerto 5173
-cd backend && uvicorn app.main:app --reload  # Backend en puerto 8000
-
-# Producción
-npm run build              # Build del frontend
-npm run start              # Servir frontend en producción
+uvicorn app.main:app --reload  # Servidor de desarrollo
+python cargar_datos.py         # Cargar datos iniciales
+python init_db.py              # Inicializar base de datos
 ```
 
-## 🐛 Troubleshooting
+### Estructura de API
 
-- **Error de CORS:** Verificar configuración de orígenes en `backend/app/main.py`
-- **Base de datos:** Railway automáticamente provee PostgreSQL via `DATABASE_URL`
-- **Variables de entorno:** Usar `VITE_API_URL` para el frontend
-- **Timeout:** El backend tiene timeout de 30s para arranque en Railway 
+```
+GET    /api/indicadores        # Listar indicadores
+POST   /api/indicadores        # Crear indicador
+PUT    /api/indicadores/{id}   # Actualizar indicador
+DELETE /api/indicadores/{id}   # Eliminar indicador
+GET    /health                 # Health check
+GET    /docs                   # Documentación Swagger
+```
+
+## 🔍 Troubleshooting
+
+### Errores Comunes
+
+**1. Puerto 5173 ocupado**
+```bash
+cd frontend
+npm run dev -- --port 3000
+```
+
+**2. Error de conexión a base de datos**
+```bash
+# Verificar PostgreSQL esté corriendo
+# Verificar variable DATABASE_URL
+```
+
+**3. Dependencias no encontradas**
+```bash
+# Reinstalar dependencias
+rm -rf frontend/node_modules
+rm -rf backend/venv
+.\install_dependencies.bat
+```
+
+## 📈 Características del Dashboard
+
+- 📊 **Gráficos Dinámicos**: Visualización de progreso
+- 🎯 **Indicadores KPI**: Métricas clave
+- 📅 **Cronograma Gantt**: Timeline de hitos
+- 🔍 **Filtros Inteligentes**: Búsqueda y categorización
+- 📱 **Responsive**: Adaptable a cualquier pantalla
+- 🎨 **Tema Moderno**: UI/UX optimizada
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 📞 Soporte
+
+- 📧 Email: soporte@horizons.com
+- 📚 Documentación: [/docs](./docs/)
+- 🐛 Issues: [GitHub Issues](link-to-issues)
+
+---
+
+**Hecho con ❤️ para la gestión eficiente de indicadores empresariales** 
