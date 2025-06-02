@@ -1,16 +1,21 @@
 import axios from 'axios';
 
-// Configuración de la URL de la API
-// Usar HTTPS para evitar Mixed Content errors
-const API_URL = 'https://sistema-indicadores-production.up.railway.app/api';
+// Configuración de la URL de la API para Railway
+// Usar variables de entorno para mayor flexibilidad
+const API_URL = import.meta.env.VITE_API_URL || 
+              (import.meta.env.MODE === 'production' 
+                ? 'https://sistema-indicadores-backend-production.up.railway.app/api'
+                : 'http://localhost:8000/api');
 
 console.log('🔗 API URL configurada:', API_URL);
+console.log('🌍 Modo:', import.meta.env.MODE);
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 segundos timeout para Railway
 });
 
 // Interceptor para manejar errores
@@ -20,6 +25,10 @@ api.interceptors.response.use(
     console.error('Error en API:', error);
     if (error.code === 'ECONNREFUSED') {
       console.error('❌ No se puede conectar al backend. Verifica que esté corriendo.');
+    } else if (error.code === 'ENOTFOUND') {
+      console.error('❌ No se pudo resolver la URL del backend.');
+    } else if (error.response?.status === 503) {
+      console.error('❌ El backend está arrancando. Intenta en unos segundos.');
     }
     return Promise.reject(error);
   }

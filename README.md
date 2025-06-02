@@ -156,4 +156,140 @@ Sistema desarrollado para gestión interna organizacional.
 
 ---
 
-💡 **Tip:** Usa `diagnosticar.bat` si encuentras problemas de conectividad. 
+💡 **Tip:** Usa `diagnosticar.bat` si encuentras problemas de conectividad.
+
+## 🚀 Deploy en Railway
+
+### Backend (FastAPI)
+
+1. **Crear nuevo proyecto en Railway**
+   ```bash
+   # Conecta tu repositorio a Railway
+   # Selecciona la carpeta backend/ como source
+   ```
+
+2. **Configurar variables de entorno**
+   ```
+   # Railway automáticamente provee:
+   DATABASE_URL=postgresql://...
+   RAILWAY_ENVIRONMENT_NAME=production
+   
+   # Opcional (añadir si necesario):
+   FRONTEND_URL=https://tu-frontend-url.up.railway.app
+   ```
+
+3. **Configurar el deployment**
+   - Root Directory: `/backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --host 0.0.0.0 --port $PORT`
+
+### Frontend (React + Vite)
+
+1. **Crear otro proyecto en Railway**
+   ```bash
+   # Conecta el mismo repositorio
+   # Selecciona la carpeta raíz como source
+   ```
+
+2. **Configurar variables de entorno**
+   ```
+   VITE_API_URL=https://tu-backend-url.up.railway.app/api
+   ```
+
+3. **Configurar el deployment**
+   - Build Command: `npm run build`
+   - Start Command: `npm run start`
+   - Root Directory: `/` (raíz del proyecto)
+
+### Datos Iniciales
+
+Después del deployment del backend, cargar los datos:
+
+```bash
+# Conectarse al backend via Railway CLI o directamente en la plataforma
+python backend/cargar_datos.py
+```
+
+## 🛠️ Desarrollo Local
+
+### Prerrequisitos
+
+- Node.js 18+
+- Python 3.9+
+- PostgreSQL (opcional, usa SQLite como fallback)
+
+### Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <tu-repositorio>
+   cd sistema-indicadores
+   ```
+
+2. **Frontend**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+3. **Backend**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python -m uvicorn app.main:app --reload
+   ```
+
+4. **Cargar datos (opcional)**
+   ```bash
+   cd backend
+   python cargar_datos.py
+   ```
+
+## 📊 Características
+
+- ✅ Dashboard interactivo con métricas en tiempo real
+- ✅ Gráficos Gantt profesionales para seguimiento de proyectos
+- ✅ Gestión de indicadores por VP y área
+- ✅ Filtrado avanzado por estado, tipo y responsable
+- ✅ Datos reales importados desde Excel
+- ✅ API REST completa con FastAPI
+- ✅ Base de datos PostgreSQL con fallback a SQLite
+- ✅ Deploy optimizado para Railway
+
+## 📈 API Endpoints
+
+- `GET /api/indicadores` - Obtener todos los indicadores
+- `GET /api/indicadores/area/{area}` - Filtrar por área
+- `POST /api/indicadores` - Crear nuevo indicador
+- `PUT /api/indicadores/{id}` - Actualizar indicador
+- `DELETE /api/indicadores/{id}` - Eliminar indicador
+- `GET /api/indicadores/estadisticas/dashboard` - Estadísticas del dashboard
+
+## 💾 Base de Datos
+
+El sistema utiliza PostgreSQL en producción (Railway) con SQLite como fallback para desarrollo local. Los datos incluyen:
+
+- **14 Indicadores** distribuidos por VPs (VPD, VPE, PRE)
+- **83 Hitos** con fechas reales y estados de progreso
+- **Áreas organizacionales** específicas por VP
+- **Estados:** En Progreso, Completado, Por Comenzar
+- **Tipos:** Estratégico, Gestion
+
+## ⚡ Comandos Útiles
+
+```bash
+# Desarrollo completo
+npm run dev                 # Frontend en puerto 5173
+cd backend && uvicorn app.main:app --reload  # Backend en puerto 8000
+
+# Producción
+npm run build              # Build del frontend
+npm run start              # Servir frontend en producción
+```
+
+## 🐛 Troubleshooting
+
+- **Error de CORS:** Verificar configuración de orígenes en `backend/app/main.py`
+- **Base de datos:** Railway automáticamente provee PostgreSQL via `DATABASE_URL`
+- **Variables de entorno:** Usar `VITE_API_URL` para el frontend
+- **Timeout:** El backend tiene timeout de 30s para arranque en Railway 
