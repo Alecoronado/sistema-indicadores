@@ -45,4 +45,41 @@ def delete_indicador_endpoint(indicador_id: int, db: Session = Depends(get_db)):
 
 @router.get("/estadisticas/dashboard")
 def get_estadisticas_endpoint(db: Session = Depends(get_db)):
-    return get_estadisticas(db) 
+    return get_estadisticas(db)
+
+@router.post("/cargar-datos")
+def cargar_datos_endpoint():
+    """Endpoint para cargar datos desde Excel si la base está vacía"""
+    try:
+        # Importar y ejecutar la función de carga
+        import sys
+        import os
+        
+        # Agregar directorio padre al path
+        parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        sys.path.append(parent_dir)
+        
+        from auto_load_data import verificar_y_cargar_datos
+        
+        # Capturar output en variable
+        import io
+        import contextlib
+        
+        output_buffer = io.StringIO()
+        
+        with contextlib.redirect_stdout(output_buffer):
+            verificar_y_cargar_datos()
+        
+        output = output_buffer.getvalue()
+        
+        return {
+            "success": True,
+            "message": "Proceso de carga ejecutado",
+            "output": output
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error ejecutando carga: {str(e)}"
+        } 
