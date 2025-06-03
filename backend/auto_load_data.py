@@ -48,10 +48,28 @@ def verificar_y_cargar_datos():
         
         print("🔄 Base de datos vacía. Cargando datos automáticamente...")
         
-        # Verificar si existe el archivo Excel
-        excel_file = 'Base de datos.xlsx'
-        if not os.path.exists(excel_file):
-            print(f"❌ No se encuentra el archivo {excel_file}")
+        # Buscar archivo Excel en múltiples ubicaciones
+        excel_files_to_try = [
+            'Base de datos.xlsx',
+            './Base de datos.xlsx', 
+            'backend/Base de datos.xlsx',
+            os.path.join(os.path.dirname(__file__), 'Base de datos.xlsx'),
+            '/app/backend/Base de datos.xlsx'  # Railway path
+        ]
+        
+        excel_file = None
+        for file_path in excel_files_to_try:
+            if os.path.exists(file_path):
+                excel_file = file_path
+                print(f"✅ Archivo encontrado en: {file_path}")
+                break
+        
+        if not excel_file:
+            print(f"❌ No se encuentra el archivo 'Base de datos.xlsx' en ninguna ubicación:")
+            for path in excel_files_to_try:
+                print(f"   - {path}")
+            print(f"📁 Directorio actual: {os.getcwd()}")
+            print(f"📂 Archivos en directorio: {os.listdir('.')}")
             return
         
         # Leer y procesar datos
@@ -114,6 +132,8 @@ def verificar_y_cargar_datos():
         
     except Exception as e:
         print(f"❌ Error cargando datos: {e}")
+        import traceback
+        print(f"📋 Traceback: {traceback.format_exc()}")
         session.rollback()
     finally:
         session.close()
