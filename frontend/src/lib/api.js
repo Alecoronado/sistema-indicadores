@@ -4,7 +4,7 @@ import axios from 'axios';
 // Usar variables de entorno para mayor flexibilidad
 const API_URL = import.meta.env.VITE_API_URL || 
               (import.meta.env.MODE === 'production' 
-                ? 'https://sistema-indicadores-production.up.railway.app/api'
+                ? 'https://backend-indicadores-production.up.railway.app/api'
                 : 'http://localhost:8000/api');
 
 console.log('🔗 API URL configurada:', API_URL);

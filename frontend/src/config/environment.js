@@ -18,11 +18,11 @@ function getDefaultApiUrl() {
   }
   
   // Si estás en producción, usar la URL de Railway
-  return 'https://sistema-indicadores-production.up.railway.app/api';
+  return 'https://backend-indicadores-production.up.railway.app/api';
 }
 
 // URL de Railway para uso directo
-export const RAILWAY_API_URL = 'https://sistema-indicadores-production.up.railway.app/api';
+export const RAILWAY_API_URL = 'https://backend-indicadores-production.up.railway.app/api';
 
 console.log('🌍 Entorno:', config.isDevelopment ? 'Desarrollo' : 'Producción');
 console.log('🔗 API URL:', config.API_URL); 
