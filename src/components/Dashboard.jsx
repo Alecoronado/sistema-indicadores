@@ -144,7 +144,7 @@ const Dashboard = () => {
         <div className="text-center p-8 bg-blue-50 border border-blue-200 rounded-lg max-w-md">
           <div className="text-blue-600 text-6xl mb-4">📊</div>
           <h2 className="text-xl font-semibold text-blue-800 mb-2">Base de datos vacía</h2>
-          <p className="text-blue-600 mb-6">No se encontraron indicadores. Carga datos de ejemplo para comenzar a usar la aplicación.</p>
+          <p className="text-blue-600 mb-6">No se encontraron indicadores. Carga los datos reales de tu organización para comenzar.</p>
           
           <button 
             onClick={cargarDatos}
@@ -154,17 +154,17 @@ const Dashboard = () => {
             {cargandoDatos ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Creando datos...
+                Cargando datos reales...
               </>
             ) : (
               <>
-                🚀 Crear datos de ejemplo
+                📊 Cargar datos de la organización
               </>
             )}
           </button>
           
           <p className="text-xs text-gray-500 mt-4">
-            Se crearán 5 indicadores profesionales con hitos realistas
+            Se cargarán los datos reales: VPD, VPE, Alianza Estratégica, etc.
           </p>
         </div>
       </div>
