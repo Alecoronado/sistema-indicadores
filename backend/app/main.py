@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from .routers import indicadores
 from .database import engine
 from .models import indicador
 import os
+import json
 
 # Crear las tablas en la base de datos
 indicador.Base.metadata.create_all(bind=engine)
@@ -13,6 +15,14 @@ app = FastAPI(
     description="API para el sistema de gestión de indicadores",
     version="1.0.0"
 )
+
+# Middleware personalizado para UTF-8
+@app.middleware("http")
+async def add_utf8_headers(request, call_next):
+    response = await call_next(request)
+    if "application/json" in response.headers.get("content-type", ""):
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    return response
 
 # Configuración CORS simplificada
 if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
