@@ -49,9 +49,9 @@ def get_estadisticas_endpoint(db: Session = Depends(get_db)):
 
 @router.post("/cargar-datos")
 def cargar_datos_endpoint():
-    """Endpoint para cargar datos desde Excel si la base está vacía"""
+    """Endpoint para cargar datos de ejemplo profesionales (SIN EXCEL)"""
     try:
-        # Importar y ejecutar la función de carga
+        # Importar y ejecutar la función de carga de datos ejemplo
         import sys
         import os
         
@@ -59,7 +59,7 @@ def cargar_datos_endpoint():
         parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sys.path.append(parent_dir)
         
-        from auto_load_data import verificar_y_cargar_datos
+        from crear_datos_ejemplo import crear_datos_ejemplo
         
         # Capturar output en variable
         import io
@@ -68,18 +68,19 @@ def cargar_datos_endpoint():
         output_buffer = io.StringIO()
         
         with contextlib.redirect_stdout(output_buffer):
-            verificar_y_cargar_datos()
+            result = crear_datos_ejemplo()
         
         output = output_buffer.getvalue()
         
         return {
             "success": True,
-            "message": "Proceso de carga ejecutado",
-            "output": output
+            "message": "Datos de ejemplo creados correctamente",
+            "output": output,
+            "data": result
         }
         
     except Exception as e:
         return {
             "success": False,
-            "message": f"Error ejecutando carga: {str(e)}"
+            "message": f"Error creando datos de ejemplo: {str(e)}"
         } 
