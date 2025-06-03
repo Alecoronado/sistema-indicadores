@@ -6,7 +6,6 @@ import Dashboard from '@/pages/Dashboard';
 import NuevoIndicador from '@/pages/NuevoIndicador';
 import ActualizarIndicador from '@/pages/ActualizarIndicador';
 import HistorialIndicadores from '@/pages/HistorialIndicadores';
-import GanttProfesional from '@/pages/GanttProfesional';
 import GanttSyncfusion from '@/pages/GanttSyncfusion';
 import { IndicadoresProvider } from '@/context/IndicadoresContext';
 
@@ -19,8 +18,7 @@ function App() {
           <Route path="/nuevo-indicador" element={<NuevoIndicador />} />
           <Route path="/actualizar-indicador" element={<ActualizarIndicador />} />
           <Route path="/historial" element={<HistorialIndicadores />} />
-          <Route path="/gantt" element={<GanttProfesional />} />
-          <Route path="/gantt-syncfusion" element={<GanttSyncfusion />} />
+          <Route path="/gantt" element={<GanttSyncfusion />} />
         </Routes>
       </Layout>
       <Toaster />
