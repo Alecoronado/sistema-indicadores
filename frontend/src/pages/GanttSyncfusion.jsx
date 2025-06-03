@@ -11,82 +11,106 @@ const GanttSyncfusion = () => {
 
   // Transformar datos para Syncfusion Gantt con mejor estructura
   const datosGantt = useMemo(() => {
-    if (!indicadores || indicadores.length === 0) return [];
+    // Protección robusta: asegurar que indicadores sea un array válido
+    const indicadoresArray = Array.isArray(indicadores) && indicadores.length > 0 ? indicadores : [];
+    
+    if (indicadoresArray.length === 0) {
+      console.log('📊 GanttSyncfusion: No hay indicadores disponibles');
+      return [];
+    }
 
-    let indicadoresFiltrados = indicadores;
+    let indicadoresFiltrados = indicadoresArray;
     if (areaSeleccionada !== 'Todas') {
-      indicadoresFiltrados = indicadores.filter(ind => ind.area === areaSeleccionada);
+      indicadoresFiltrados = indicadoresArray.filter(ind => ind && ind.area === areaSeleccionada);
     }
 
     const datos = [];
     let taskID = 1;
 
-    indicadoresFiltrados.forEach((indicador, indIndex) => {
-      // Indicador principal
-      const indicadorTask = {
-        TaskID: taskID++,
-        TaskName: indicador.nombreIndicador,
-        StartDate: new Date(indicador.fechaInicioGeneral),
-        EndDate: new Date(indicador.fechaFinalizacionGeneral),
-        Progress: Math.floor(Math.random() * 101), // Progress aleatorio para demo
-        Area: indicador.area,
-        VP: indicador.vp,
-        TipoIndicador: indicador.tipoIndicador,
-        Assignee: indicador.vp || 'Sin asignar',
-        Priority: 'High',
-        subtasks: []
-      };
+    // Proteger el forEach también
+    if (Array.isArray(indicadoresFiltrados)) {
+      indicadoresFiltrados.forEach((indicador, indIndex) => {
+        // Validar que el indicador tenga las propiedades necesarias
+        if (!indicador || !indicador.nombreIndicador) {
+          console.warn('⚠️ Indicador inválido:', indicador);
+          return;
+        }
 
-      // Agregar hitos como subtareas con mejor información
-      if (indicador.hitos && indicador.hitos.length > 0) {
-        indicador.hitos.forEach((hito, hitoIndex) => {
-          const progressValue = parseInt(hito.avanceHito) || Math.floor(Math.random() * 101);
-          indicadorTask.subtasks.push({
-            TaskID: taskID++,
-            TaskName: hito.nombreHito,
-            StartDate: new Date(hito.fechaInicioHito),
-            EndDate: new Date(hito.fechaFinalizacionHito),
-            Progress: progressValue,
-            Assignee: hito.responsableHito || `Usuario ${hitoIndex + 1}`,
-            Estado: hito.estadoHito,
-            Orden: hito.ordenHito || hitoIndex + 1,
-            Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
+        // Indicador principal
+        const indicadorTask = {
+          TaskID: taskID++,
+          TaskName: indicador.nombreIndicador || 'Indicador sin nombre',
+          StartDate: indicador.fechaInicioGeneral ? new Date(indicador.fechaInicioGeneral) : new Date(),
+          EndDate: indicador.fechaFinalizacionGeneral ? new Date(indicador.fechaFinalizacionGeneral) : new Date(),
+          Progress: Math.floor(Math.random() * 101), // Progress aleatorio para demo
+          Area: indicador.area || 'Sin área',
+          VP: indicador.vp || 'Sin VP',
+          TipoIndicador: indicador.tipoIndicador || 'Sin tipo',
+          Assignee: indicador.vp || 'Sin asignar',
+          Priority: 'High',
+          subtasks: []
+        };
+
+        // Agregar hitos como subtareas con mejor información
+        const hitosArray = Array.isArray(indicador.hitos) ? indicador.hitos : [];
+        
+        if (hitosArray.length > 0) {
+          hitosArray.forEach((hito, hitoIndex) => {
+            if (!hito || !hito.nombreHito) {
+              console.warn('⚠️ Hito inválido:', hito);
+              return;
+            }
+
+            const progressValue = parseInt(hito.avanceHito) || Math.floor(Math.random() * 101);
+            indicadorTask.subtasks.push({
+              TaskID: taskID++,
+              TaskName: hito.nombreHito,
+              StartDate: hito.fechaInicioHito ? new Date(hito.fechaInicioHito) : new Date(),
+              EndDate: hito.fechaFinalizacionHito ? new Date(hito.fechaFinalizacionHito) : new Date(),
+              Progress: progressValue,
+              Assignee: hito.responsableHito || `Usuario ${hitoIndex + 1}`,
+              Estado: hito.estadoHito || 'Sin estado',
+              Orden: hito.ordenHito || hitoIndex + 1,
+              Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
+            });
           });
-        });
-      } else {
-        // Si no hay hitos, crear algunas tareas de ejemplo
-        const tareasEjemplo = [
-          'Análisis y diseño',
-          'Desarrollo inicial', 
-          'Implementación',
-          'Pruebas y validación',
-          'Entrega final'
-        ];
+        } else {
+          // Si no hay hitos, crear algunas tareas de ejemplo
+          const tareasEjemplo = [
+            'Análisis y diseño',
+            'Desarrollo inicial', 
+            'Implementación',
+            'Pruebas y validación',
+            'Entrega final'
+          ];
 
-        tareasEjemplo.forEach((tarea, index) => {
-          const startDate = new Date(indicador.fechaInicioGeneral);
-          startDate.setDate(startDate.getDate() + (index * 7));
-          const endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 6);
-          
-          const progressValue = Math.floor(Math.random() * 101);
-          
-          indicadorTask.subtasks.push({
-            TaskID: taskID++,
-            TaskName: tarea,
-            StartDate: startDate,
-            EndDate: endDate,
-            Progress: progressValue,
-            Assignee: ['Martin Tamer', 'Rose Fuller', 'Fuller King', 'Jack Davolio'][index % 4],
-            Estado: progressValue > 80 ? 'Completado' : progressValue > 50 ? 'En Proceso' : 'Pendiente',
-            Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
+          tareasEjemplo.forEach((tarea, index) => {
+            const baseDate = indicador.fechaInicioGeneral ? new Date(indicador.fechaInicioGeneral) : new Date();
+            const startDate = new Date(baseDate);
+            startDate.setDate(startDate.getDate() + (index * 7));
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+            
+            const progressValue = Math.floor(Math.random() * 101);
+            
+            indicadorTask.subtasks.push({
+              TaskID: taskID++,
+              TaskName: tarea,
+              StartDate: startDate,
+              EndDate: endDate,
+              Progress: progressValue,
+              Assignee: ['Martin Tamer', 'Rose Fuller', 'Fuller King', 'Jack Davolio'][index % 4],
+              Estado: progressValue > 80 ? 'Completado' : progressValue > 50 ? 'En Proceso' : 'Pendiente',
+              Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
+            });
           });
-        });
-      }
+        }
 
-      datos.push(indicadorTask);
-    });
+        datos.push(indicadorTask);
+      });
+    }
 
+    console.log('📊 Datos Gantt generados:', datos.length, 'tareas');
     return datos;
   }, [indicadores, areaSeleccionada]);
 
@@ -269,10 +293,10 @@ const GanttSyncfusion = () => {
       {/* Componente Gantt */}
       <Card className="shadow-lg">
         <CardContent className="p-0">
-          {datosGantt.length > 0 ? (
+          {Array.isArray(datosGantt) && datosGantt.length > 0 ? (
             <div style={{ height: '700px' }}>
               <GanttComponent
-                dataSource={datosGantt}
+                dataSource={Array.isArray(datosGantt) ? datosGantt : []}
                 taskFields={taskFields}
                 editSettings={editSettings}
                 labelSettings={labelSettings}
@@ -321,8 +345,15 @@ const GanttSyncfusion = () => {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <Users className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium mb-2">No hay proyectos para mostrar</h3>
-              <p>Agrega algunos indicadores para ver el cronograma profesional.</p>
+              <h3 className="text-lg font-medium mb-2">
+                {!Array.isArray(indicadores) ? 'Cargando datos...' : 'No hay proyectos para mostrar'}
+              </h3>
+              <p>
+                {!Array.isArray(indicadores) 
+                  ? 'Esperando conexión con el backend...' 
+                  : 'Agrega algunos indicadores para ver el cronograma profesional.'
+                }
+              </p>
             </div>
           )}
         </CardContent>
