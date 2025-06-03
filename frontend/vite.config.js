@@ -20,7 +20,7 @@ export default defineConfig({
 	build: {
 		outDir: 'dist',
 		sourcemap: false,
-		target: ['es2018', 'chrome64', 'firefox62', 'safari12'],
+		target: ['es2020', 'chrome80', 'firefox78', 'safari14'],
 		rollupOptions: {
 			output: {
 				manualChunks: {
@@ -32,9 +32,23 @@ export default defineConfig({
 				},
 			},
 		},
+		commonjsOptions: {
+			include: [/node_modules/],
+		},
 	},
 	optimizeDeps: {
-		include: ['@syncfusion/ej2-react-gantt', 'react', 'react-dom', 'recharts'],
+		include: [
+			'@syncfusion/ej2-react-gantt',
+			'@radix-ui/react-icons',
+			'@radix-ui/react-label', 
+			'@radix-ui/react-select',
+			'@radix-ui/react-slot',
+			'@radix-ui/react-toast',
+			'react', 
+			'react-dom', 
+			'recharts'
+		],
+		force: true,
 	},
 	resolve: {
 		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
