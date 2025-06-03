@@ -1,17 +1,11 @@
 import axios from 'axios';
+import { config } from '@/config/environment';
 
-// Configuración de la URL de la API para Railway
-// Usar variables de entorno para mayor flexibilidad
-const API_URL = import.meta.env.VITE_API_URL || 
-              (import.meta.env.MODE === 'production' 
-                ? 'https://backend-indicadores-production.up.railway.app/api'
-                : 'http://localhost:8000/api');
-
-console.log('🔗 API URL configurada:', API_URL);
-console.log('🌍 Modo:', import.meta.env.MODE);
+console.log('🔗 API URL configurada:', config.API_URL);
+console.log('🌍 Modo:', config.isDevelopment ? 'Desarrollo' : 'Producción');
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: config.API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

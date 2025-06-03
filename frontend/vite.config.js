@@ -27,13 +27,14 @@ export default defineConfig({
 					vendor: ['react', 'react-dom'],
 					router: ['react-router-dom'],
 					charts: ['recharts'],
-					gantt: ['@syncfusion/ej2-react-gantt', 'wx-react-gantt'],
+					gantt: ['@syncfusion/ej2-react-gantt'],
+					ui: ['@radix-ui/react-icons', '@radix-ui/react-label', '@radix-ui/react-select', '@radix-ui/react-slot', '@radix-ui/react-toast'],
 				},
 			},
 		},
 	},
 	optimizeDeps: {
-		include: ['@syncfusion/ej2-react-gantt', 'wx-react-gantt', 'react', 'react-dom'],
+		include: ['@syncfusion/ej2-react-gantt', 'react', 'react-dom', 'recharts'],
 	},
 	resolve: {
 		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
