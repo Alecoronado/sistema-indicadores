@@ -20,7 +20,7 @@ export default defineConfig({
 	build: {
 		outDir: 'dist',
 		sourcemap: false,
-		target: 'es2018',
+		target: ['es2018', 'chrome64', 'firefox62', 'safari12'],
 		rollupOptions: {
 			output: {
 				manualChunks: {
@@ -31,6 +31,9 @@ export default defineConfig({
 				},
 			},
 		},
+	},
+	optimizeDeps: {
+		include: ['@syncfusion/ej2-react-gantt', 'wx-react-gantt', 'react', 'react-dom'],
 	},
 	resolve: {
 		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
