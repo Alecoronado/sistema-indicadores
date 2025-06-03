@@ -32,7 +32,8 @@ const ActualizarIndicador = () => {
 
   // Obtener todos los hitos con información del indicador
   const todosLosHitos = useMemo(() => {
-    return indicadores.flatMap(indicador => 
+    const indicadoresArray = Array.isArray(indicadores) ? indicadores : [];
+    return indicadoresArray.flatMap(indicador => 
       (indicador.hitos || []).map(hito => ({
         ...hito,
         indicadorId: indicador.id,

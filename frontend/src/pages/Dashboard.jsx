@@ -34,7 +34,8 @@ const Dashboard = () => {
 
   // Calcular estadísticas basadas en los indicadores filtrados
   const estadisticasFiltradas = React.useMemo(() => {
-    const todosLosHitos = indicadoresFiltrados.flatMap(ind => ind.hitos || []);
+    const indicadoresArray = Array.isArray(indicadoresFiltrados) ? indicadoresFiltrados : [];
+    const todosLosHitos = indicadoresArray.flatMap(ind => ind.hitos || []);
     
     const hitosCompletados = todosLosHitos.filter(hito => hito.estadoHito === 'Completado').length;
     const hitosEnProgreso = todosLosHitos.filter(hito => hito.estadoHito === 'En Progreso').length;
@@ -45,7 +46,7 @@ const Dashboard = () => {
     const promedioAvance = todosLosHitos.length > 0 ? Math.round(avanceTotal / todosLosHitos.length * 100) / 100 : 0;
 
     return {
-      totalIndicadores: indicadoresFiltrados.length,
+      totalIndicadores: indicadoresArray.length,
       totalHitos: todosLosHitos.length,
       hitosCompletados,
       hitosEnProgreso,
@@ -76,7 +77,7 @@ const Dashboard = () => {
     }
   };
 
-  const hitosRecientes = indicadoresFiltrados
+  const hitosRecientes = (Array.isArray(indicadoresFiltrados) ? indicadoresFiltrados : [])
     .flatMap(indicador => 
       (indicador.hitos || []).map(hito => ({
         ...hito, 

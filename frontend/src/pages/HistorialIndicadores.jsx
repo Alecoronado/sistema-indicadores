@@ -64,7 +64,8 @@ const HistorialIndicadores = () => {
     }
 
     // Convertir a hitos y aplicar búsqueda
-    return indicadoresParaMostrar.flatMap(indicador => 
+    const indicadoresArray = Array.isArray(indicadoresParaMostrar) ? indicadoresParaMostrar : [];
+    const todosLosHitos = indicadoresArray.flatMap(indicador =>
       (indicador.hitos || []).map(hito => ({
         ...hito,
         idIndicador: indicador.id,
@@ -74,7 +75,9 @@ const HistorialIndicadores = () => {
         tipoIndicador: indicador.tipoIndicador,
         responsableGeneral: indicador.responsableGeneral
       }))
-    ).filter(hito => {
+    );
+
+    return todosLosHitos.filter(hito => {
       const terminoBusqueda = busqueda.toLowerCase();
       const pasaBusqueda = 
         !busqueda || 
