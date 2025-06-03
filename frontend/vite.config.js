@@ -21,6 +21,9 @@ export default defineConfig({
 		outDir: 'dist',
 		sourcemap: false,
 		target: 'es2015',
+		commonjsOptions: {
+			transformMixedEsModules: true,
+		},
 		rollupOptions: {
 			output: {
 				manualChunks: {
@@ -30,6 +33,12 @@ export default defineConfig({
 					gantt: ['@syncfusion/ej2-react-gantt', 'wx-react-gantt'],
 				},
 			},
+		},
+	},
+	optimizeDeps: {
+		include: ['@syncfusion/ej2-react-gantt', 'wx-react-gantt'],
+		esbuildOptions: {
+			target: 'es2015',
 		},
 	},
 	resolve: {
