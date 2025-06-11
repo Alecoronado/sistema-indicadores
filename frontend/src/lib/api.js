@@ -1,6 +1,6 @@
 // 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas con fallback
 const getBaseUrl = () => {
-  const viteApiUrl = import.meta.env.VITE_API_URL;
+  const viteApiUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
   
   // Si VITE_API_URL es undefined, null, o contiene literalmente "VITE_API_URL"
   if (!viteApiUrl || viteApiUrl === 'VITE_API_URL' || viteApiUrl.includes('VITE_API_URL')) {
