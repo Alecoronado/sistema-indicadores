@@ -29,6 +29,8 @@ if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
     # Producción en Railway - CORS específico para Vercel + Railway + localhost
     allowed_origins = [
         "https://*.vercel.app",           # 🚀 VERCEL
+        "https://sistema-indicadores-git-main-alecoronados-projects.vercel.app",  # Vercel específico
+        "https://sistema-indicadores-alecoronados-projects.vercel.app",  # Vercel específico
         "https://*.railway.app", 
         "https://*.up.railway.app",
         "http://localhost:5173",
@@ -38,7 +40,7 @@ if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Temporal - permitir todos los orígenes
+        allow_origins=["*"],  # 🚀 TEMPORAL: Permitir todos los orígenes para debug
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],

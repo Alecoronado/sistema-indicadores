@@ -82,7 +82,17 @@ export const IndicadoresProvider = ({ children }) => {
         console.log('🔍 CONTEXTO - Intentando con fetch directo (como TestAPI)...');
         
         // Fallback: usar fetch directo con URL hardcodeada (más confiable)
-        const directResponse = await fetch('https://backend-indicadores-production.up.railway.app/api/indicadores');
+        console.log('🧪 CONTEXTO - Probando fetch directo...');
+        const directResponse = await fetch('https://backend-indicadores-production.up.railway.app/api/indicadores', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('🧪 CONTEXTO - Response status:', directResponse.status);
+        console.log('🧪 CONTEXTO - Response headers:', Object.fromEntries(directResponse.headers.entries()));
+        
         if (!directResponse.ok) {
           throw new Error(`HTTP error! status: ${directResponse.status}`);
         }
