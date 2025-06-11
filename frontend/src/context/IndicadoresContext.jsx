@@ -81,8 +81,8 @@ export const IndicadoresProvider = ({ children }) => {
         console.log('❌ CONTEXTO - Error con axios:', axiosError);
         console.log('🔍 CONTEXTO - Intentando con fetch directo (como TestAPI)...');
         
-        // Fallback: usar fetch directo con URL completa
-        const directResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/indicadores`);
+        // Fallback: usar fetch directo con URL hardcodeada (más confiable)
+        const directResponse = await fetch('https://backend-indicadores-production.up.railway.app/api/indicadores');
         if (!directResponse.ok) {
           throw new Error(`HTTP error! status: ${directResponse.status}`);
         }

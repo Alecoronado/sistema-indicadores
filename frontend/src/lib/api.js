@@ -1,7 +1,24 @@
-// 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas
-const baseUrl = import.meta.env.VITE_API_URL;
+// 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas con fallback
+const getBaseUrl = () => {
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  
+  // Si VITE_API_URL es undefined, null, o contiene literalmente "VITE_API_URL"
+  if (!viteApiUrl || viteApiUrl === 'VITE_API_URL' || viteApiUrl.includes('VITE_API_URL')) {
+    // Fallback basado en el entorno
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    } else {
+      return 'https://backend-indicadores-production.up.railway.app';
+    }
+  }
+  
+  return viteApiUrl;
+};
 
-console.log('🔗 VITE_API_URL:', baseUrl);
+const baseUrl = getBaseUrl();
+
+console.log('🔗 VITE_API_URL original:', import.meta.env.VITE_API_URL);
+console.log('🔗 Base URL final:', baseUrl);
 console.log('🌍 Modo:', import.meta.env.DEV ? 'Desarrollo' : 'Producción');
 
 export const indicadoresApi = {
