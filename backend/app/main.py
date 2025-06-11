@@ -73,4 +73,15 @@ def health_check():
         "message": "API funcionando correctamente",
         "database": "connected",
         "version": "1.0.0"
+    }
+
+@app.get("/test-cors")
+def test_cors():
+    """Endpoint específico para probar CORS desde Vercel"""
+    return {
+        "message": "CORS funcionando correctamente",
+        "timestamp": "2025-01-11",
+        "backend": "Railway",
+        "frontend": "Vercel",
+        "status": "success"
     } 
