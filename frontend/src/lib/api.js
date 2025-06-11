@@ -1,7 +1,12 @@
 import axios from 'axios';
 import { config } from '@/config/environment';
 
+// 🎯 ALTERNATIVA DIRECTA (como sugieren las mejores prácticas):
+// const baseUrl = import.meta.env.VITE_API_URL;
+// const api = axios.create({ baseURL: `${baseUrl}/api` });
+
 console.log('🔗 API URL configurada:', config.API_URL);
+console.log('🔗 Base URL:', config.BASE_URL);  
 console.log('🌍 Modo:', config.isDevelopment ? 'Desarrollo' : 'Producción');
 
 const api = axios.create({
