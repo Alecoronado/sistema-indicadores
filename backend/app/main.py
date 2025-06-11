@@ -24,19 +24,21 @@ async def add_utf8_headers(request, call_next):
         response.headers["content-type"] = "application/json; charset=utf-8"
     return response
 
-# Configuración CORS simplificada
+# Configuración CORS para producción
 if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
-    # Producción en Railway - CORS específico
+    # Producción en Railway - CORS específico para Vercel + Railway + localhost
     allowed_origins = [
-        "https://*.railway.app",
+        "https://*.vercel.app",           # 🚀 VERCEL
+        "https://*.railway.app", 
         "https://*.up.railway.app",
         "http://localhost:5173",
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://sistema-indicadores-production.up.railway.app",  # Railway frontend específico
     ]
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Temporal para debug
+        allow_origins=["*"],  # Temporal - permitir todos los orígenes
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
