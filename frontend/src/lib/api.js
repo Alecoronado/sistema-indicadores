@@ -1,25 +1,12 @@
-// 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas con fallback
+// 🚀 VERCEL: Configuración simplificada y robusta
 const getBaseUrl = () => {
-  const viteApiUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
-  
-  // Si VITE_API_URL es undefined, null, o contiene literalmente "VITE_API_URL"
-  if (!viteApiUrl || viteApiUrl === 'VITE_API_URL' || viteApiUrl.includes('VITE_API_URL')) {
-    // Fallback basado en el entorno
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:8000';
-    } else {
-      return 'https://backend-indicadores-production.up.railway.app';
-    }
+  // En desarrollo local
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
   }
   
-  // 🔧 RECOMENDACIÓN 1: Forzar HTTPS en producción
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    if (viteApiUrl.startsWith('http://')) {
-      return viteApiUrl.replace('http://', 'https://');
-    }
-  }
-  
-  return viteApiUrl;
+  // En producción (Vercel)
+  return import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app';
 };
 
 const baseUrl = getBaseUrl();
