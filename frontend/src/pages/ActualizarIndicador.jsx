@@ -27,62 +27,85 @@ const ActualizarIndicador = () => {
   const [formData, setFormData] = useState({
     avanceHito: 0,
     estadoHito: '',
-    comentarioHito: '' 
+    comentarioHito: '',
+    fechaFinalizacionHito: '',
+    fechaInicioHito: '' // Solo para referencia, no editable
   });
 
-  // Obtener todos los hitos con información del indicador
+  // Crear lista de todos los hitos con información del indicador padre
   const todosLosHitos = useMemo(() => {
-    const indicadoresArray = Array.isArray(indicadores) ? indicadores : [];
-    return indicadoresArray.flatMap(indicador => 
-      (indicador.hitos || []).map(hito => ({
-        ...hito,
-        indicadorId: indicador.id,
-        indicadorNombre: indicador.nombreIndicador,
-        vp: indicador.vp,
-        area: indicador.area,
-        tipoIndicador: indicador.tipoIndicador
-      }))
-    );
+    if (!Array.isArray(indicadores)) return [];
+    
+    return indicadores.flatMap(indicador => {
+      if (!indicador || !Array.isArray(indicador.hitos)) return [];
+      
+      return indicador.hitos
+        .filter(hito => hito) // Filtrar hitos null/undefined
+        .map(hito => ({
+          ...hito,
+          indicadorId: indicador.id,
+          indicadorNombre: indicador.nombreIndicador || 'Sin nombre',
+          vp: indicador.vp || 'Sin VP',
+          area: indicador.area || 'Sin área',
+          tipoIndicador: indicador.tipoIndicador || 'Sin tipo'
+        }));
+    });
   }, [indicadores]);
 
   // Obtener áreas disponibles según VP seleccionado
   const areasDisponibles = useMemo(() => {
-    if (!vpFiltro) return [];
-    return [...new Set(indicadores.filter(ind => ind.vp === vpFiltro).map(ind => ind.area))];
+    if (!vpFiltro || !Array.isArray(indicadores)) return [];
+    
+    return [...new Set(
+      indicadores
+        .filter(ind => ind && ind.vp === vpFiltro)
+        .map(ind => ind.area)
+        .filter(Boolean) // Filtrar valores null/undefined
+    )];
   }, [vpFiltro, indicadores]);
 
   // Obtener indicadores disponibles según VP y Área seleccionados
   const indicadoresDisponibles = useMemo(() => {
-    if (!vpFiltro || !areaFiltro) return [];
-    return indicadores.filter(ind => ind.vp === vpFiltro && ind.area === areaFiltro);
+    if (!vpFiltro || !areaFiltro || !Array.isArray(indicadores)) return [];
+    
+    return indicadores.filter(ind => ind && ind.vp === vpFiltro && ind.area === areaFiltro);
   }, [vpFiltro, areaFiltro, indicadores]);
 
   // Obtener hitos disponibles según indicador seleccionado
   const hitosDisponibles = useMemo(() => {
-    if (!indicadorFiltro) return [];
-    const indicadorSeleccionado = indicadores.find(ind => ind.id === indicadorFiltro);
-    return indicadorSeleccionado ? indicadorSeleccionado.hitos || [] : [];
+    if (!indicadorFiltro || !Array.isArray(indicadores)) return [];
+    
+    const indicadorSeleccionado = indicadores.find(ind => ind && ind.id === indicadorFiltro);
+    return indicadorSeleccionado && Array.isArray(indicadorSeleccionado.hitos) ? 
+      indicadorSeleccionado.hitos.filter(hito => hito) : [];
   }, [indicadorFiltro, indicadores]);
 
   // Obtener responsables disponibles según los filtros actuales
   const responsablesDisponibles = useMemo(() => {
+    if (!Array.isArray(todosLosHitos)) return [];
+    
     let hitosParaResponsables = todosLosHitos;
     
     if (vpFiltro) {
-      hitosParaResponsables = hitosParaResponsables.filter(hito => hito.vp === vpFiltro);
+      hitosParaResponsables = hitosParaResponsables.filter(hito => hito && hito.vp === vpFiltro);
     }
     if (areaFiltro) {
-      hitosParaResponsables = hitosParaResponsables.filter(hito => hito.area === areaFiltro);
+      hitosParaResponsables = hitosParaResponsables.filter(hito => hito && hito.area === areaFiltro);
     }
     if (indicadorFiltro) {
-      hitosParaResponsables = hitosParaResponsables.filter(hito => hito.indicadorId === indicadorFiltro);
+      hitosParaResponsables = hitosParaResponsables.filter(hito => hito && hito.indicadorId === indicadorFiltro);
     }
     if (hitoFiltro) {
-      hitosParaResponsables = hitosParaResponsables.filter(hito => hito.idHito === hitoFiltro);
+      hitosParaResponsables = hitosParaResponsables.filter(hito => hito && hito.idHito === hitoFiltro);
     }
     
-    const responsables = [...new Set(hitosParaResponsables.map(hito => hito.responsableHito))];
-    return responsables.filter(Boolean).sort();
+    const responsables = [...new Set(
+      hitosParaResponsables
+        .map(hito => hito.responsableHito)
+        .filter(Boolean) // Filtrar valores null/undefined
+    )];
+    
+    return responsables.sort();
   }, [todosLosHitos, vpFiltro, areaFiltro, indicadorFiltro, hitoFiltro]);
 
   // Verificar si hay filtros activos
@@ -90,9 +113,11 @@ const ActualizarIndicador = () => {
 
   // Filtrar hitos según los criterios seleccionados
   const hitosFiltrados = useMemo(() => {
-    if (!hayFiltrosActivos) return [];
+    if (!hayFiltrosActivos || !Array.isArray(todosLosHitos)) return [];
     
     return todosLosHitos.filter(hito => {
+      if (!hito) return false;
+      
       const cumpleVP = !vpFiltro || hito.vp === vpFiltro;
       const cumpleArea = !areaFiltro || hito.area === areaFiltro;
       const cumpleIndicador = !indicadorFiltro || hito.indicadorId === indicadorFiltro;
@@ -133,7 +158,9 @@ const ActualizarIndicador = () => {
     setFormData({
       avanceHito: hito.avanceHito || 0,
       estadoHito: hito.estadoHito || '',
-      comentarioHito: hito.comentarioHito || ''
+      comentarioHito: hito.comentarioHito || '',
+      fechaFinalizacionHito: hito.fechaFinalizacionHito || '',
+      fechaInicioHito: hito.fechaInicioHito || ''
     });
     setMostrarModal(true);
   };
@@ -141,7 +168,7 @@ const ActualizarIndicador = () => {
   const cerrarModal = () => {
     setHitoSeleccionado(null);
     setMostrarModal(false);
-    setFormData({ avanceHito: 0, estadoHito: '', comentarioHito: '' });
+    setFormData({ avanceHito: 0, estadoHito: '', comentarioHito: '', fechaFinalizacionHito: '', fechaInicioHito: '' });
   };
 
   const handleChange = (e) => {
@@ -514,6 +541,32 @@ const ActualizarIndicador = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  {/* Campo de Fecha de Finalización */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fechaFinalizacionHito">Fecha de Finalización</Label>
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1">
+                        <Input
+                          id="fechaFinalizacionHito"
+                          name="fechaFinalizacionHito"
+                          type="date"
+                          value={formData.fechaFinalizacionHito}
+                          onChange={handleChange}
+                          min={formData.fechaInicioHito}
+                          className="w-full"
+                        />
+                      </div>
+                      {formData.fechaInicioHito && (
+                        <div className="text-xs text-gray-500 md:self-center">
+                          <span className="font-medium">Fecha de inicio:</span> {new Date(formData.fechaInicioHito).toLocaleDateString('es-ES')}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Esta fecha se mostrará en el cronograma Gantt y debe ser posterior a la fecha de inicio
+                    </p>
                   </div>
 
                   <div className="space-y-2">

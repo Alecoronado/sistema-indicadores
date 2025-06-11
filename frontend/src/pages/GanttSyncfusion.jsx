@@ -1,357 +1,329 @@
 import React, { useMemo } from 'react';
-import { GanttComponent, Inject, Edit, Filter, Sort, Selection, Toolbar, ColumnsDirective, ColumnDirective } from '@syncfusion/ej2-react-gantt';
 import { useIndicadores } from '@/context/IndicadoresContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, BarChart3, Filter as FilterIcon, Users } from 'lucide-react';
+import { Filter as FilterIcon } from 'lucide-react';
 
-const GanttSyncfusion = () => {
-  const { indicadores, areas } = useIndicadores();
-  const [areaSeleccionada, setAreaSeleccionada] = React.useState('Todas');
+const GanttChart = () => {
+  const { indicadores, vps, areas } = useIndicadores();
+  
+  // Estados para filtros (sin forzar jerarquía)
+  const [vpFiltro, setVpFiltro] = React.useState('todas');
+  const [areaFiltro, setAreaFiltro] = React.useState('todas');
+  const [indicadorFiltro, setIndicadorFiltro] = React.useState('');
 
-  // Transformar datos para Syncfusion Gantt con mejor estructura
-  const datosGantt = useMemo(() => {
-    // Protección robusta: asegurar que indicadores sea un array válido
-    const indicadoresArray = Array.isArray(indicadores) && indicadores.length > 0 ? indicadores : [];
+  // Obtener áreas disponibles según VP seleccionado (opcional)
+  const areasDisponibles = useMemo(() => {
+    if (vpFiltro === 'todas' || !Array.isArray(indicadores)) return areas || [];
     
-    if (indicadoresArray.length === 0) {
-      console.log('📊 GanttSyncfusion: No hay indicadores disponibles');
-      return [];
+    return [...new Set(
+      indicadores
+        .filter(ind => ind && ind.vp === vpFiltro)
+        .map(ind => ind.area)
+        .filter(Boolean)
+    )];
+  }, [vpFiltro, indicadores, areas]);
+
+  // Obtener indicadores disponibles según filtros
+  const indicadoresDisponibles = useMemo(() => {
+    if (!Array.isArray(indicadores)) return [];
+    
+    return indicadores.filter(ind => {
+      if (!ind || !ind.nombreIndicador) return false;
+      
+      const cumpleVP = vpFiltro === 'todas' || ind.vp === vpFiltro;
+      const cumpleArea = areaFiltro === 'todas' || ind.area === areaFiltro;
+      
+      return cumpleVP && cumpleArea;
+    });
+  }, [indicadores, vpFiltro, areaFiltro]);
+
+  // Transformar datos para Gantt - solo hitos, sin barra del indicador
+  const datosGantt = useMemo(() => {
+    if (!indicadorFiltro || !Array.isArray(indicadores)) {
+      return { datos: [], meses: [], fechaMin: new Date(), fechaMax: new Date() };
     }
 
-    let indicadoresFiltrados = indicadoresArray;
-    if (areaSeleccionada !== 'Todas') {
-      indicadoresFiltrados = indicadoresArray.filter(ind => ind && ind.area === areaSeleccionada);
+    const indicador = indicadores.find(ind => ind.id === parseInt(indicadorFiltro));
+    if (!indicador) {
+      return { datos: [], meses: [], fechaMin: new Date(), fechaMax: new Date() };
     }
 
-    const datos = [];
-    let taskID = 1;
+    // Función para obtener color según el estado del hito
+    const obtenerColorPorEstado = (estadoHito) => {
+      switch (estadoHito) {
+        case 'Completado':
+          return '#7dc383'; // Verde claro
+        case 'En Progreso':
+          return '#d4a574'; // Marrón claro
+        case 'Por Comenzar':
+          return '#9ca3af'; // Gris claro
+        default:
+          return '#9ca3af'; // Gris claro por defecto
+      }
+    };
+    const hitosArray = Array.isArray(indicador.hitos) ? indicador.hitos : [];
+    
+    if (hitosArray.length === 0) {
+      return { datos: [], meses: [], fechaMin: new Date(), fechaMax: new Date() };
+    }
 
-    // Proteger el forEach también
-    if (Array.isArray(indicadoresFiltrados)) {
-      indicadoresFiltrados.forEach((indicador, indIndex) => {
-        // Validar que el indicador tenga las propiedades necesarias
-        if (!indicador || !indicador.nombreIndicador) {
-          console.warn('⚠️ Indicador inválido:', indicador);
-          return;
+    // Encontrar fechas min y max solo de los hitos - con validación mejorada
+    let fechaMin = null;
+    let fechaMax = null;
+    
+    hitosArray.forEach(hito => {
+      if (!hito) return;
+      
+      if (hito.fechaInicioHito) {
+        const fecha = new Date(hito.fechaInicioHito);
+        if (!isNaN(fecha.getTime())) {
+          if (!fechaMin || fecha < fechaMin) fechaMin = fecha;
+          if (!fechaMax || fecha > fechaMax) fechaMax = fecha;
         }
-
-        // Indicador principal
-        const indicadorTask = {
-          TaskID: taskID++,
-          TaskName: indicador.nombreIndicador || 'Indicador sin nombre',
-          StartDate: indicador.fechaInicioGeneral ? new Date(indicador.fechaInicioGeneral) : new Date(),
-          EndDate: indicador.fechaFinalizacionGeneral ? new Date(indicador.fechaFinalizacionGeneral) : new Date(),
-          Progress: Math.floor(Math.random() * 101), // Progress aleatorio para demo
-          Area: indicador.area || 'Sin área',
-          VP: indicador.vp || 'Sin VP',
-          TipoIndicador: indicador.tipoIndicador || 'Sin tipo',
-          Assignee: indicador.vp || 'Sin asignar',
-          Priority: 'High',
-          subtasks: []
-        };
-
-        // Agregar hitos como subtareas con mejor información
-        const hitosArray = Array.isArray(indicador.hitos) ? indicador.hitos : [];
-        
-        if (hitosArray.length > 0) {
-          hitosArray.forEach((hito, hitoIndex) => {
-            if (!hito || !hito.nombreHito) {
-              console.warn('⚠️ Hito inválido:', hito);
-              return;
-            }
-
-            const progressValue = parseInt(hito.avanceHito) || Math.floor(Math.random() * 101);
-            indicadorTask.subtasks.push({
-              TaskID: taskID++,
-              TaskName: hito.nombreHito,
-              StartDate: hito.fechaInicioHito ? new Date(hito.fechaInicioHito) : new Date(),
-              EndDate: hito.fechaFinalizacionHito ? new Date(hito.fechaFinalizacionHito) : new Date(),
-              Progress: progressValue,
-              Assignee: hito.responsableHito || `Usuario ${hitoIndex + 1}`,
-              Estado: hito.estadoHito || 'Sin estado',
-              Orden: hito.ordenHito || hitoIndex + 1,
-              Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
-            });
-          });
-        } else {
-          // Si no hay hitos, crear algunas tareas de ejemplo
-          const tareasEjemplo = [
-            'Análisis y diseño',
-            'Desarrollo inicial', 
-            'Implementación',
-            'Pruebas y validación',
-            'Entrega final'
-          ];
-
-          tareasEjemplo.forEach((tarea, index) => {
-            const baseDate = indicador.fechaInicioGeneral ? new Date(indicador.fechaInicioGeneral) : new Date();
-            const startDate = new Date(baseDate);
-            startDate.setDate(startDate.getDate() + (index * 7));
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + 6);
-            
-            const progressValue = Math.floor(Math.random() * 101);
-            
-            indicadorTask.subtasks.push({
-              TaskID: taskID++,
-              TaskName: tarea,
-              StartDate: startDate,
-              EndDate: endDate,
-              Progress: progressValue,
-              Assignee: ['Martin Tamer', 'Rose Fuller', 'Fuller King', 'Jack Davolio'][index % 4],
-              Estado: progressValue > 80 ? 'Completado' : progressValue > 50 ? 'En Proceso' : 'Pendiente',
-              Priority: progressValue > 80 ? 'High' : progressValue > 50 ? 'Medium' : 'Low'
-            });
-          });
+      }
+      if (hito.fechaFinalizacionHito) {
+        const fecha = new Date(hito.fechaFinalizacionHito);
+        if (!isNaN(fecha.getTime())) {
+          if (!fechaMin || fecha < fechaMin) fechaMin = fecha;
+          if (!fechaMax || fecha > fechaMax) fechaMax = fecha;
         }
+      }
+    });
 
-        datos.push(indicadorTask);
+    // Si no hay fechas válidas, usar fechas por defecto
+    if (!fechaMin || !fechaMax) {
+      const ahora = new Date();
+      fechaMin = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+      fechaMax = new Date(ahora.getFullYear(), ahora.getMonth() + 3, 1);
+    }
+
+    // Asegurar que fechaMax sea después de fechaMin
+    if (fechaMax <= fechaMin) {
+      fechaMax = new Date(fechaMin.getTime() + (30 * 24 * 60 * 60 * 1000)); // Agregar 30 días
+    }
+
+    // Generar meses del rango - con límite de seguridad
+    const meses = [];
+    const fechaActual = new Date(fechaMin.getFullYear(), fechaMin.getMonth(), 1);
+    const fechaLimite = new Date(fechaMax.getFullYear(), fechaMax.getMonth() + 1, 1);
+    let contador = 0;
+    const MAX_MESES = 36; // Límite de seguridad para evitar bucles infinitos
+    
+    while (fechaActual < fechaLimite && contador < MAX_MESES) {
+      meses.push({
+        mes: fechaActual.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }),
+        fecha: new Date(fechaActual)
       });
+      fechaActual.setMonth(fechaActual.getMonth() + 1);
+      contador++;
     }
 
-    console.log('📊 Datos Gantt generados:', datos.length, 'tareas');
-    return datos;
-  }, [indicadores, areaSeleccionada]);
+    // Procesar solo los hitos (sin indicador principal)
+    const hitosData = [];
+    
+    hitosArray.forEach((hito, hitoIndex) => {
+      if (!hito || !hito.nombreHito) return;
 
-  // Configuración de campos de tarea
-  const taskFields = {
-    id: 'TaskID',
-    name: 'TaskName',
-    startDate: 'StartDate',
-    endDate: 'EndDate',
-    duration: 'Duration',
-    progress: 'Progress',
-    child: 'subtasks'
-  };
+      const hitoColor = obtenerColorPorEstado(hito.estadoHito);
+      
+      // Validar fechas del hito
+      let fechaInicioHito = fechaMin;
+      let fechaFinHito = fechaMax;
+      
+      if (hito.fechaInicioHito) {
+        const tempInicio = new Date(hito.fechaInicioHito);
+        if (!isNaN(tempInicio.getTime())) {
+          fechaInicioHito = tempInicio;
+        }
+      }
+      
+      if (hito.fechaFinalizacionHito) {
+        const tempFin = new Date(hito.fechaFinalizacionHito);
+        if (!isNaN(tempFin.getTime())) {
+          fechaFinHito = tempFin;
+        }
+      }
 
-  // Configuración de edición
-  const editSettings = {
-    allowAdding: true,
-    allowEditing: true,
-    allowDeleting: true,
-    allowTaskbarEditing: true,
-    showDeleteConfirmDialog: true
-  };
+      // Asegurar que la fecha de fin sea después de la de inicio
+      if (fechaFinHito <= fechaInicioHito) {
+        fechaFinHito = new Date(fechaInicioHito.getTime() + (7 * 24 * 60 * 60 * 1000)); // Agregar 7 días
+      }
+      
+      hitosData.push({
+        id: `hito-${hitoIndex}`,
+        nombre: `${hito.nombreHito} (${hito.responsableHito || 'Sin responsable'})`,
+        color: hitoColor,
+        fechaInicio: fechaInicioHito,
+        fechaFin: fechaFinHito,
+        fechaFinTexto: fechaFinHito.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+        progreso: Math.max(0, Math.min(100, hito.avanceHito || 0)),
+        fechaConProgreso: `${fechaFinHito.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })} - ${Math.max(0, Math.min(100, hito.avanceHito || 0))}%`,
+        estadoHito: hito.estadoHito || 'Sin estado'
+      });
+    });
 
-  // Configuración de etiquetas
-  const labelSettings = {
-    rightLabel: 'Assignee',
-    taskLabel: 'Progress'
-  };
+    // Ordenar hitos por fecha de finalización (de la más cercana a la más lejana)
+    hitosData.sort((a, b) => a.fechaFin - b.fechaFin);
 
-  // Configuración de línea de tiempo
-  const timelineSettings = {
-    timelineUnitSize: 60,
-    topTier: {
-      unit: 'Month',
-      format: 'MMM yyyy',
-      count: 1
-    },
-    bottomTier: {
-      unit: 'Day',
-      count: 2
-    }
-  };
+    return { datos: hitosData, meses, fechaMin, fechaMax };
+  }, [indicadores, indicadorFiltro]);
 
-  // Configuración de divisor
-  const splitterSettings = {
-    position: '50%'
-  };
-
-  // Herramientas de toolbar
-  const toolbar = ['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll', 'Search', 'ZoomIn', 'ZoomOut', 'ZoomToFit'];
-
-  // Template para la columna de Assignee con avatar
-  const assigneeTemplate = (props) => {
-    const getAvatarColor = (name) => {
-      const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-      const index = name ? name.length % colors.length : 0;
-      return colors[index];
+  // Función para calcular posición de una barra
+  const calcularPosicion = (fechaInicio, fechaFin, fechaMin, fechaMax) => {
+    const rangoTotal = fechaMax - fechaMin;
+    if (rangoTotal <= 0) return { left: 0, width: 100 };
+    
+    const inicioRelativo = fechaInicio - fechaMin;
+    const duracion = fechaFin - fechaInicio;
+    
+    const left = Math.max(0, (inicioRelativo / rangoTotal) * 100);
+    const width = Math.max(1, (duracion / rangoTotal) * 100);
+    
+    // Asegurar que no se salga del contenedor
+    const maxWidth = 100 - left;
+    
+    return { 
+      left: Math.min(left, 99), 
+      width: Math.min(width, maxWidth)
     };
-
-    const getInitials = (name) => {
-      if (!name || name === 'Sin asignar') return '?';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    };
-
-    return (
-      <div className="flex items-center gap-2">
-        <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-          style={{ backgroundColor: getAvatarColor(props.Assignee) }}
-        >
-          {getInitials(props.Assignee)}
-        </div>
-        <span className="text-sm font-medium">{props.Assignee}</span>
-      </div>
-    );
-  };
-
-  // Template para mostrar el progreso
-  const progressTemplate = (props) => {
-    const getProgressColor = (progress) => {
-      if (progress >= 80) return '#10b981'; // Verde
-      if (progress >= 50) return '#f59e0b'; // Amarillo
-      return '#ef4444'; // Rojo
-    };
-
-    return (
-      <div className="flex items-center gap-2">
-        <div className="w-16 bg-gray-200 rounded-full h-2">
-          <div 
-            className="h-2 rounded-full" 
-            style={{ 
-              width: `${props.Progress}%`,
-              backgroundColor: getProgressColor(props.Progress)
-            }}
-          ></div>
-        </div>
-        <span className="text-xs font-bold" style={{ color: getProgressColor(props.Progress) }}>
-          {props.Progress}%
-        </span>
-      </div>
-    );
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            <Calendar className="h-8 w-8 text-blue-600" />
-            Sistema de Indicadores
-          </h1>
-          <p className="text-gray-600 mt-1">Cronograma profesional con Syncfusion</p>
-        </div>
+      {/* Título centrado */}
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          Cronograma de Indicadores - Tablero de Control Estratégico
+        </h1>
         
-        {/* Filtro por Área */}
-        <div className="flex items-center gap-2">
+        {/* Filtros jerárquicos */}
+        <div className="flex justify-center items-center gap-4 mb-4">
           <FilterIcon className="h-5 w-5 text-gray-500" />
-          <Select value={areaSeleccionada} onValueChange={setAreaSeleccionada}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por Área" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todas">Todas las áreas</SelectItem>
-              {(areas || []).map(area => (
-                <SelectItem key={area} value={area}>{area}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          
+          {/* Filtro por VP */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">VP:</span>
+            <Select value={vpFiltro} onValueChange={setVpFiltro}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las VPs</SelectItem>
+                {(vps || []).map(vp => (
+                  <SelectItem key={vp} value={vp}>{vp}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro por Área */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Área:</span>
+            <Select value={areaFiltro} onValueChange={setAreaFiltro}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las áreas</SelectItem>
+                {areasDisponibles.map(area => (
+                  <SelectItem key={area} value={area}>{area}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Selector de Indicador */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Indicador:</span>
+            <Select value={indicadorFiltro} onValueChange={setIndicadorFiltro}>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder="Selecciona un indicador" />
+              </SelectTrigger>
+              <SelectContent>
+                {indicadoresDisponibles.map(ind => (
+                  <SelectItem key={ind.id} value={ind.id.toString()}>
+                    {ind.nombreIndicador}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Proyectos</p>
-              <p className="text-2xl font-bold text-blue-600">{datosGantt.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Tareas</p>
-              <p className="text-2xl font-bold text-green-600">
-                {datosGantt.reduce((total, ind) => total + (ind.subtasks?.length || 0), 0)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Completadas</p>
-              <p className="text-2xl font-bold text-amber-600">
-                {datosGantt.reduce((total, ind) => 
-                  total + (ind.subtasks?.filter(h => h.Progress >= 100).length || 0), 0)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Promedio</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {Math.round(datosGantt.reduce((total, ind) => 
-                  total + (ind.subtasks?.reduce((sum, h) => sum + h.Progress, 0) / (ind.subtasks?.length || 1) || 0), 0) / (datosGantt.length || 1))}%
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Componente Gantt */}
+      {/* Gantt simple con HTML/CSS - Solo hitos */}
       <Card className="shadow-lg">
-        <CardContent className="p-0">
-          {Array.isArray(datosGantt) && datosGantt.length > 0 ? (
-            <div style={{ height: '700px' }}>
-              <GanttComponent
-                dataSource={Array.isArray(datosGantt) ? datosGantt : []}
-                taskFields={taskFields}
-                editSettings={editSettings}
-                labelSettings={labelSettings}
-                timelineSettings={timelineSettings}
-                splitterSettings={splitterSettings}
-                toolbar={toolbar}
-                allowSelection={true}
-                allowFiltering={true}
-                allowSorting={true}
-                allowReordering={true}
-                allowResizing={true}
-                height="700px"
-                gridLines="Both"
-                treeColumnIndex={1}
-                rowHeight={45}
-                taskbarHeight={30}
-                projectStartDate={new Date('2024-01-01')}
-                projectEndDate={new Date('2024-12-31')}
-              >
-                <ColumnsDirective>
-                  <ColumnDirective field="TaskID" visible={false} />
-                  <ColumnDirective 
-                    field="TaskName" 
-                    headerText="Tarea" 
-                    width="280"
-                    clipMode="EllipsisWithTooltip"
-                  />
-                  <ColumnDirective 
-                    field="Assignee" 
-                    headerText="Asignado" 
-                    width="200"
-                    template={assigneeTemplate}
-                  />
-                  <ColumnDirective 
-                    field="Progress" 
-                    headerText="Progreso" 
-                    width="120"
-                    template={progressTemplate}
-                  />
-                  <ColumnDirective field="StartDate" headerText="Inicio" width="100" />
-                  <ColumnDirective field="EndDate" headerText="Fin" width="100" />
-                </ColumnsDirective>
-                <Inject services={[Edit, Filter, Sort, Selection, Toolbar]} />
-              </GanttComponent>
+        <CardContent className="p-4">
+          {datosGantt.datos.length > 0 ? (
+            <div className="gantt-container">
+              {/* Header con meses */}
+              <div className="gantt-header" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', borderBottom: '2px solid #ccc' }}>
+                <div className="gantt-tasks-header" style={{ padding: '10px', fontWeight: 'bold', borderRight: '1px solid #ccc' }}>
+                  Actividades
+                </div>
+                <div className="gantt-timeline-header" style={{ display: 'flex', padding: '10px 0' }}>
+                  {datosGantt.meses.map((mes, index) => (
+                    <div key={index} style={{ flex: 1, textAlign: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                      {mes.mes}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filas del Gantt - Solo hitos */}
+              <div className="gantt-body">
+                {datosGantt.datos.map((hito) => (
+                  <div key={hito.id} style={{ display: 'grid', gridTemplateColumns: '400px 1fr', borderBottom: '1px solid #eee', minHeight: '50px' }}>
+                    <div style={{ padding: '12px 15px', borderRight: '1px solid #ccc', fontSize: '14px' }}>
+                      {hito.nombre}
+                    </div>
+                    <div style={{ position: 'relative', padding: '8px 0' }}>
+                      {(() => {
+                        const pos = calcularPosicion(hito.fechaInicio, hito.fechaFin, datosGantt.fechaMin, datosGantt.fechaMax);
+                        return (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${pos.left}%`,
+                              width: `${pos.width}%`,
+                              height: '32px',
+                              backgroundColor: hito.color,
+                              border: '1px solid #666',
+                              borderRadius: '3px',
+                              top: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              padding: '0 4px'
+                            }}
+                            title={`Estado: ${hito.estadoHito} | Progreso: ${hito.progreso}%`}
+                          >
+                            {hito.fechaConProgreso}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
-              <Users className="h-16 w-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium mb-2">
-                {!Array.isArray(indicadores) ? 'Cargando datos...' : 'No hay proyectos para mostrar'}
+                {!indicadorFiltro ? 'Selecciona un indicador' : 'No hay datos para mostrar'}
               </h3>
               <p>
-                {!Array.isArray(indicadores) 
-                  ? 'Esperando conexión con el backend...' 
-                  : 'Agrega algunos indicadores para ver el cronograma profesional.'
+                {!indicadorFiltro 
+                  ? 'Elige un indicador de la lista para ver su cronograma detallado.'
+                  : 'El indicador seleccionado no tiene hitos válidos.'
                 }
               </p>
             </div>
@@ -362,4 +334,4 @@ const GanttSyncfusion = () => {
   );
 };
 
-export default GanttSyncfusion; 
+export default GanttChart; 

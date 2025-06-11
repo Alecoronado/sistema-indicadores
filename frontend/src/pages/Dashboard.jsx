@@ -16,43 +16,100 @@ import { useIndicadores } from '@/context/IndicadoresContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import TestAPI from '@/components/TestAPI';
 
 const Dashboard = () => {
   const { indicadores, areas } = useIndicadores();
   const [areaSeleccionada, setAreaSeleccionada] = useState('Todas');
   const [indicadoresFiltrados, setIndicadoresFiltrados] = useState([]);
 
+  // Log adicional para verificar props del contexto
+  console.log('🎯 DASHBOARD - Props del contexto:');
+  console.log('🎯 DASHBOARD - indicadores desde contexto:', indicadores);
+  console.log('🎯 DASHBOARD - indicadores tipo:', typeof indicadores);
+  console.log('🎯 DASHBOARD - indicadores es array?:', Array.isArray(indicadores));
+  console.log('🎯 DASHBOARD - indicadores length:', indicadores?.length);
+  console.log('🎯 DASHBOARD - areas desde contexto:', areas);
+
   // Filtrar indicadores cuando cambia el área seleccionada
   useEffect(() => {
+    console.log('🔍 DASHBOARD - useEffect ejecutándose');
+    console.log('🔍 DASHBOARD - indicadores:', indicadores);
+    console.log('🔍 DASHBOARD - areaSeleccionada:', areaSeleccionada);
+    console.log('🔍 DASHBOARD - indicadores es array?:', Array.isArray(indicadores));
+    console.log('🔍 DASHBOARD - indicadores length:', indicadores?.length);
+    
+    if (!Array.isArray(indicadores)) {
+      console.warn('⚠️ DASHBOARD - indicadores no es array, seteando []');
+      setIndicadoresFiltrados([]);
+      return;
+    }
+    
     if (areaSeleccionada === 'Todas') {
-      setIndicadoresFiltrados(indicadores || []);
+      console.log('✅ DASHBOARD - Mostrando todas las áreas');
+      setIndicadoresFiltrados(indicadores);
     } else {
-      const filtrados = (indicadores || []).filter(ind => ind.area === areaSeleccionada);
+      const filtrados = indicadores.filter(ind => ind && ind.area === areaSeleccionada);
+      console.log('✅ DASHBOARD - Filtrados por área:', filtrados);
       setIndicadoresFiltrados(filtrados);
     }
   }, [indicadores, areaSeleccionada]);
 
   // Calcular estadísticas basadas en los indicadores filtrados
   const estadisticasFiltradas = React.useMemo(() => {
-    const indicadoresArray = Array.isArray(indicadoresFiltrados) ? indicadoresFiltrados : [];
-    const todosLosHitos = indicadoresArray.flatMap(ind => ind.hitos || []);
+    console.log('🔍 DASHBOARD - Calculando estadísticas');
+    console.log('🔍 DASHBOARD - indicadoresFiltrados:', indicadoresFiltrados);
+    console.log('🔍 DASHBOARD - indicadoresFiltrados es array?:', Array.isArray(indicadoresFiltrados));
+    console.log('🔍 DASHBOARD - indicadoresFiltrados length:', indicadoresFiltrados?.length);
     
-    const hitosCompletados = todosLosHitos.filter(hito => hito.estadoHito === 'Completado').length;
-    const hitosEnProgreso = todosLosHitos.filter(hito => hito.estadoHito === 'En Progreso').length;
-    const hitosPorComenzar = todosLosHitos.filter(hito => hito.estadoHito === 'Por Comenzar').length;
+    if (!Array.isArray(indicadoresFiltrados)) {
+      console.warn('⚠️ DASHBOARD - indicadoresFiltrados no es array');
+      return {
+        totalIndicadores: 0,
+        totalHitos: 0,
+        hitosCompletados: 0,
+        hitosEnProgreso: 0,
+        hitosPorComenzar: 0,
+        promedioAvance: 0
+      };
+    }
     
-    // Calcular promedio de avance
-    const avanceTotal = todosLosHitos.reduce((sum, hito) => sum + (hito.avanceHito || 0), 0);
-    const promedioAvance = todosLosHitos.length > 0 ? Math.round(avanceTotal / todosLosHitos.length * 100) / 100 : 0;
+    const todosLosHitos = indicadoresFiltrados.flatMap(ind => {
+      if (!ind || !Array.isArray(ind.hitos)) {
+        console.log('⚠️ DASHBOARD - Indicador sin hitos válidos:', ind);
+        return [];
+      }
+      console.log('✅ DASHBOARD - Indicador con hitos:', ind.nombreIndicador, 'hitos:', ind.hitos.length);
+      return ind.hitos.filter(hito => hito);
+    });
+    
+    console.log('🔍 DASHBOARD - todosLosHitos:', todosLosHitos);
+    console.log('🔍 DASHBOARD - total hitos encontrados:', todosLosHitos.length);
+    
+    const hitosCompletados = todosLosHitos.filter(hito => hito && hito.estadoHito === 'Completado').length;
+    const hitosEnProgreso = todosLosHitos.filter(hito => hito && hito.estadoHito === 'En Progreso').length;
+    const hitosPorComenzar = todosLosHitos.filter(hito => hito && hito.estadoHito === 'Por Comenzar').length;
+    
+    // Calcular promedio de avance con validaciones
+    const avanceTotal = todosLosHitos.reduce((sum, hito) => {
+      const avance = hito && typeof hito.avanceHito === 'number' ? hito.avanceHito : 0;
+      return sum + avance;
+    }, 0);
+    
+    const promedioAvance = todosLosHitos.length > 0 ? 
+      Math.round(avanceTotal / todosLosHitos.length * 100) / 100 : 0;
 
-    return {
-      totalIndicadores: indicadoresArray.length,
+    const stats = {
+      totalIndicadores: indicadoresFiltrados.length,
       totalHitos: todosLosHitos.length,
       hitosCompletados,
       hitosEnProgreso,
       hitosPorComenzar,
       promedioAvance
     };
+    
+    console.log('📊 DASHBOARD - Estadísticas calculadas:', stats);
+    return stats;
   }, [indicadoresFiltrados]);
 
   const containerVariants = {
@@ -77,18 +134,61 @@ const Dashboard = () => {
     }
   };
 
-  const hitosRecientes = (Array.isArray(indicadoresFiltrados) ? indicadoresFiltrados : [])
-    .flatMap(indicador => 
-      (indicador.hitos || []).map(hito => ({
-        ...hito, 
-        indicadorNombre: indicador.nombreIndicador, 
-        area: indicador.area
-      }))
-    )
-    .slice(0, 5);
+  const hitosRecientes = React.useMemo(() => {
+    if (!Array.isArray(indicadoresFiltrados)) return [];
+    
+    return indicadoresFiltrados
+      .flatMap(indicador => {
+        if (!indicador || !Array.isArray(indicador.hitos)) return [];
+        
+        return indicador.hitos
+          .filter(hito => hito)
+          .map(hito => ({
+            ...hito, 
+            indicadorNombre: indicador.nombreIndicador || 'Sin nombre', 
+            area: indicador.area || 'Sin área'
+          }));
+      })
+      .slice(0, 5);
+  }, [indicadoresFiltrados]);
 
   return (
     <div className="space-y-6">
+      {/* Componente de prueba para debugging */}
+      <TestAPI />
+      
+      {/* Panel de debugging visual */}
+      <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+        <h3 className="font-bold mb-2">🔍 DEBUG - Valores en tiempo real:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <strong>indicadores (contexto):</strong>
+            <p>Array: {Array.isArray(indicadores) ? 'Sí' : 'No'}</p>
+            <p>Length: {Array.isArray(indicadores) ? indicadores.length : 'N/A'}</p>
+          </div>
+          <div>
+            <strong>indicadoresFiltrados:</strong>
+            <p>Array: {Array.isArray(indicadoresFiltrados) ? 'Sí' : 'No'}</p>
+            <p>Length: {Array.isArray(indicadoresFiltrados) ? indicadoresFiltrados.length : 'N/A'}</p>
+          </div>
+          <div>
+            <strong>estadisticasFiltradas:</strong>
+            <p>Total Indicadores: {estadisticasFiltradas?.totalIndicadores ?? 'N/A'}</p>
+            <p>Total Hitos: {estadisticasFiltradas?.totalHitos ?? 'N/A'}</p>
+          </div>
+          <div>
+            <strong>hitosRecientes:</strong>
+            <p>Array: {Array.isArray(hitosRecientes) ? 'Sí' : 'No'}</p>
+            <p>Length: {Array.isArray(hitosRecientes) ? hitosRecientes.length : 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* DEBUG: Logs antes del renderizado */}
+      {console.log('🎯 DASHBOARD RENDER - estadisticasFiltradas:', estadisticasFiltradas)}
+      {console.log('🎯 DASHBOARD RENDER - indicadoresFiltrados:', indicadoresFiltrados)}
+      {console.log('🎯 DASHBOARD RENDER - hitosRecientes:', hitosRecientes)}
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
@@ -103,7 +203,7 @@ const Dashboard = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todas">Todas las áreas</SelectItem>
-              {(areas || []).map(area => (
+              {Array.isArray(areas) && areas.map(area => (
                 <SelectItem key={area} value={area}>{area}</SelectItem>
               ))}
             </SelectContent>

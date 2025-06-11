@@ -57,14 +57,84 @@ export const IndicadoresProvider = ({ children }) => {
   const cargarIndicadores = async () => {
     try {
       setLoading(true);
-      const response = await indicadoresApi.getIndicadores();
-      setIndicadores(response.data);
+      console.log('🔍 CONTEXTO - Cargando indicadores...');
+      
+      let dataToUse = [];
+      
+      try {
+        // Intentar primero con axios
+        console.log('🔍 CONTEXTO - Intentando con axios...');
+        const response = await indicadoresApi.getIndicadores();
+        console.log('🔍 CONTEXTO - Respuesta de axios:', response);
+        console.log('🔍 CONTEXTO - response.data:', response.data);
+        console.log('🔍 CONTEXTO - Tipo de response.data:', typeof response.data);
+        console.log('🔍 CONTEXTO - Es array response.data?:', Array.isArray(response.data));
+        
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          console.log('✅ CONTEXTO - Axios funcionó correctamente');
+          dataToUse = response.data;
+        } else {
+          console.log('⚠️ CONTEXTO - Axios no devolvió array válido, intentando fetch...');
+          throw new Error('Axios no devolvió datos válidos');
+        }
+      } catch (axiosError) {
+        console.log('❌ CONTEXTO - Error con axios:', axiosError);
+        console.log('🔍 CONTEXTO - Intentando con fetch directo (como TestAPI)...');
+        
+        // Fallback: usar fetch directo como TestAPI
+        const directResponse = await fetch('https://backend-indicadores-production.up.railway.app/api/indicadores');
+        if (!directResponse.ok) {
+          throw new Error(`HTTP error! status: ${directResponse.status}`);
+        }
+        const directData = await directResponse.json();
+        console.log('✅ CONTEXTO - Fetch directo funcionó:', directData);
+        console.log('🔍 CONTEXTO - Tipo directo:', typeof directData);
+        console.log('🔍 CONTEXTO - Es array directo?:', Array.isArray(directData));
+        console.log('🔍 CONTEXTO - Longitud directo:', directData?.length);
+        
+        if (Array.isArray(directData)) {
+          dataToUse = directData;
+          console.log('✅ CONTEXTO - Usando datos de fetch directo');
+        } else {
+          throw new Error('Ni axios ni fetch devolvieron datos válidos');
+        }
+      }
+      
+      // Log detallado de estructura si hay datos
+      if (Array.isArray(dataToUse) && dataToUse.length > 0) {
+        console.log('🔍 CONTEXTO - Primer indicador completo:', dataToUse[0]);
+        console.log('🔍 CONTEXTO - Propiedades del primer indicador:', Object.keys(dataToUse[0] || {}));
+        if (dataToUse[0]?.hitos) {
+          console.log('🔍 CONTEXTO - Hitos del primer indicador:', dataToUse[0].hitos);
+          console.log('🔍 CONTEXTO - Es array de hitos?:', Array.isArray(dataToUse[0].hitos));
+          console.log('🔍 CONTEXTO - Cantidad de hitos:', dataToUse[0].hitos.length);
+          if (dataToUse[0].hitos.length > 0) {
+            console.log('🔍 CONTEXTO - Primer hito:', dataToUse[0].hitos[0]);
+            console.log('🔍 CONTEXTO - Propiedades del primer hito:', Object.keys(dataToUse[0].hitos[0] || {}));
+          }
+        }
+      }
+      
+      console.log('🔍 CONTEXTO - Antes de setIndicadores, dataToUse:', dataToUse);
+      console.log('🔍 CONTEXTO - dataToUse es array?:', Array.isArray(dataToUse));
+      console.log('🔍 CONTEXTO - dataToUse length:', dataToUse.length);
+      
+      setIndicadores(dataToUse);
+      console.log('✅ CONTEXTO - setIndicadores ejecutado con:', dataToUse.length, 'elementos');
+      
+      // Verificar que se seteó correctamente
+      setTimeout(() => {
+        console.log('🔍 CONTEXTO - Verificación post-setState completada');
+      }, 100);
+      
       setError(null);
     } catch (err) {
-      setError('Error al cargar los indicadores');
-      console.error('Error:', err);
+      console.error('❌ CONTEXTO - Error final al cargar los indicadores:', err);
+      setError('Error al cargar los indicadores: ' + err.message);
+      setIndicadores([]); // Asegurar que sea array vacío en caso de error
     } finally {
       setLoading(false);
+      console.log('🔍 CONTEXTO - Loading finalizado');
     }
   };
 

@@ -12,6 +12,13 @@ import { Label } from '@/components/ui/label';
 const HistorialIndicadores = () => {
   const { indicadores, vps, areas, estados, exportarXLSX } = useIndicadores();
   
+  console.log('🔍 HISTORIAL - Componente renderizándose');
+  console.log('🔍 HISTORIAL - indicadores:', indicadores);
+  console.log('🔍 HISTORIAL - indicadores es array?:', Array.isArray(indicadores));
+  console.log('🔍 HISTORIAL - indicadores length:', indicadores?.length);
+  console.log('🔍 HISTORIAL - vps:', vps);
+  console.log('🔍 HISTORIAL - areas:', areas);
+  
   // Estados para filtros jerárquicos: VP → Área → Indicador
   const [vpFiltro, setVpFiltro] = useState('');
   const [areaFiltro, setAreaFiltro] = useState('');
@@ -20,73 +27,91 @@ const HistorialIndicadores = () => {
 
   // Áreas filtradas basadas en VP seleccionado
   const areasFiltradas = useMemo(() => {
-    if (!vpFiltro) return [];
+    if (!vpFiltro || !Array.isArray(indicadores)) return [];
+    
     return [...new Set(
       indicadores
-        .filter(ind => ind.vp === vpFiltro)
+        .filter(ind => ind && ind.vp === vpFiltro)
         .map(ind => ind.area)
+        .filter(Boolean) // Filtrar valores null/undefined
     )].sort();
   }, [indicadores, vpFiltro]);
 
   // Indicadores filtrados basados en VP y Área seleccionados
   const indicadoresFiltrados = useMemo(() => {
-    if (!vpFiltro || !areaFiltro) return [];
+    if (!vpFiltro || !areaFiltro || !Array.isArray(indicadores)) return [];
+    
     return indicadores
-      .filter(ind => ind.vp === vpFiltro && ind.area === areaFiltro)
-      .sort((a, b) => a.nombreIndicador.localeCompare(b.nombreIndicador));
+      .filter(ind => ind && ind.vp === vpFiltro && ind.area === areaFiltro)
+      .sort((a, b) => (a.nombreIndicador || '').localeCompare(b.nombreIndicador || ''));
   }, [indicadores, vpFiltro, areaFiltro]);
 
   // Limpiar filtros dependientes cuando cambia un filtro padre
   const handleVpChange = (nuevoVp) => {
-    setVpFiltro(nuevoVp);
+    setVpFiltro(nuevoVp || '');
     setAreaFiltro('');
     setIndicadorFiltro('');
   };
 
   const handleAreaChange = (nuevaArea) => {
-    setAreaFiltro(nuevaArea);
+    setAreaFiltro(nuevaArea || '');
     setIndicadorFiltro('');
   };
 
   // Hitos filtrados según la jerarquía
   const hitosFiltrados = useMemo(() => {
-    let indicadoresParaMostrar = indicadores || [];
+    if (!Array.isArray(indicadores)) return [];
+    
+    let indicadoresParaMostrar = indicadores;
 
-    // Aplicar filtros jerárquicos
+    // Aplicar filtros jerárquicos con validaciones
     if (vpFiltro) {
-      indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind.vp === vpFiltro);
+      indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind && ind.vp === vpFiltro);
     }
     if (areaFiltro) {
-      indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind.area === areaFiltro);
+      indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind && ind.area === areaFiltro);
     }
     if (indicadorFiltro) {
-      indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind.id === parseInt(indicadorFiltro));
+      const indicadorId = parseInt(indicadorFiltro);
+      if (!isNaN(indicadorId)) {
+        indicadoresParaMostrar = indicadoresParaMostrar.filter(ind => ind && ind.id === indicadorId);
+      }
     }
 
-    // Convertir a hitos y aplicar búsqueda
-    const indicadoresArray = Array.isArray(indicadoresParaMostrar) ? indicadoresParaMostrar : [];
-    const todosLosHitos = indicadoresArray.flatMap(indicador =>
-      (indicador.hitos || []).map(hito => ({
-        ...hito,
-        idIndicador: indicador.id,
-        nombreIndicador: indicador.nombreIndicador,
-        area: indicador.area,
-        vp: indicador.vp,
-        tipoIndicador: indicador.tipoIndicador,
-        responsableGeneral: indicador.responsableGeneral
-      }))
-    );
-
-    return todosLosHitos.filter(hito => {
-      const terminoBusqueda = busqueda.toLowerCase();
-      const pasaBusqueda = 
-        !busqueda || 
-        (hito.nombreIndicador && hito.nombreIndicador.toLowerCase().includes(terminoBusqueda)) ||
-        (hito.nombreHito && hito.nombreHito.toLowerCase().includes(terminoBusqueda)) ||
-        (hito.responsableHito && hito.responsableHito.toLowerCase().includes(terminoBusqueda)) ||
-        (hito.responsableGeneral && hito.responsableGeneral.toLowerCase().includes(terminoBusqueda));
+    // Convertir a hitos con validaciones robustas
+    const todosLosHitos = indicadoresParaMostrar.flatMap(indicador => {
+      if (!indicador || !Array.isArray(indicador.hitos)) return [];
       
-      return pasaBusqueda;
+      return indicador.hitos
+        .filter(hito => hito) // Filtrar hitos null/undefined
+        .map(hito => ({
+          ...hito,
+          idIndicador: indicador.id,
+          nombreIndicador: indicador.nombreIndicador || 'Sin nombre',
+          area: indicador.area || 'Sin área',
+          vp: indicador.vp || 'Sin VP',
+          tipoIndicador: indicador.tipoIndicador || 'Sin tipo',
+          responsableGeneral: indicador.responsableGeneral || 'Sin responsable'
+        }));
+    });
+
+    // Aplicar búsqueda con validaciones
+    return todosLosHitos.filter(hito => {
+      if (!hito) return false;
+      
+      const terminoBusqueda = (busqueda || '').toLowerCase();
+      if (!terminoBusqueda) return true;
+      
+      const campos = [
+        hito.nombreIndicador,
+        hito.nombreHito,
+        hito.responsableHito,
+        hito.responsableGeneral
+      ];
+      
+      return campos.some(campo => 
+        campo && typeof campo === 'string' && campo.toLowerCase().includes(terminoBusqueda)
+      );
     });
   }, [indicadores, vpFiltro, areaFiltro, indicadorFiltro, busqueda]);
 
@@ -131,7 +156,7 @@ const HistorialIndicadores = () => {
                   <SelectValue placeholder="Seleccionar VP" />
                 </SelectTrigger>
                 <SelectContent>
-                  {vps.map(vp => (
+                  {Array.isArray(vps) && vps.map(vp => (
                     <SelectItem key={vp} value={vp}>{vp}</SelectItem>
                   ))}
                 </SelectContent>
@@ -152,7 +177,7 @@ const HistorialIndicadores = () => {
                   <SelectValue placeholder={!vpFiltro ? "Primero seleccione VP" : "Seleccionar Área"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {areasFiltradas.map(area => (
+                  {Array.isArray(areasFiltradas) && areasFiltradas.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
                 </SelectContent>
@@ -173,9 +198,9 @@ const HistorialIndicadores = () => {
                   <SelectValue placeholder={!areaFiltro ? "Primero seleccione Área" : "Seleccionar Indicador"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {indicadoresFiltrados.map(indicador => (
+                  {Array.isArray(indicadoresFiltrados) && indicadoresFiltrados.map(indicador => (
                     <SelectItem key={indicador.id} value={indicador.id.toString()}>
-                      {indicador.nombreIndicador}
+                      {indicador.nombreIndicador || 'Sin nombre'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -247,24 +272,42 @@ const HistorialIndicadores = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {hitosFiltrados.length > 0 ? (
+                {Array.isArray(hitosFiltrados) && hitosFiltrados.length > 0 ? (
                   hitosFiltrados.map((hito) => (
-                    <TableRow key={hito.idHito} className="table-row-alt">
-                      <TableCell className="font-medium">{hito.vp}</TableCell>
-                      <TableCell>{hito.area}</TableCell>
-                      <TableCell className="font-medium">{hito.nombreIndicador}</TableCell>
-                      <TableCell>{hito.nombreHito}</TableCell>
-                      <TableCell>{new Date(hito.fechaInicioHito).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell>{new Date(hito.fechaFinalizacionHito).toLocaleDateString('es-ES')}</TableCell>
+                    <TableRow key={hito.idHito || Math.random()} className="table-row-alt">
+                      <TableCell className="font-medium">{hito.vp || 'N/A'}</TableCell>
+                      <TableCell>{hito.area || 'N/A'}</TableCell>
+                      <TableCell className="font-medium">{hito.nombreIndicador || 'N/A'}</TableCell>
+                      <TableCell>{hito.nombreHito || 'N/A'}</TableCell>
+                      <TableCell>
+                        {hito.fechaInicioHito ? 
+                          new Date(hito.fechaInicioHito).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }) : 
+                          'N/A'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {hito.fechaFinalizacionHito ? 
+                          new Date(hito.fechaFinalizacionHito).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }) : 
+                          'N/A'
+                        }
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2.5">
                             <div 
                               className="bg-primary h-2.5 rounded-full" 
-                              style={{ width: `${hito.avanceHito}%` }}
+                              style={{ width: `${Math.max(0, Math.min(100, hito.avanceHito || 0))}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-medium">{hito.avanceHito}%</span>
+                          <span className="text-sm font-medium">{hito.avanceHito || 0}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -274,10 +317,10 @@ const HistorialIndicadores = () => {
                           hito.estadoHito === 'Por Comenzar' ? 'bg-gray-100 text-gray-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                          {hito.estadoHito}
+                          {hito.estadoHito || 'Sin estado'}
                         </span>
                       </TableCell>
-                      <TableCell>{hito.responsableHito}</TableCell>
+                      <TableCell>{hito.responsableHito || 'N/A'}</TableCell>
                     </TableRow>
                   ))
                 ) : (
