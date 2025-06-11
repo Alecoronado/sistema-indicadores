@@ -17,7 +17,7 @@ function getDefaultApiUrl() {
     return 'http://localhost:8000/api';
   }
   
-  // Si estás en producción, usar la URL de Railway
+  // Si estás en producción, SIEMPRE usar HTTPS
   return 'https://backend-indicadores-production.up.railway.app/api';
 }
 
@@ -25,4 +25,6 @@ function getDefaultApiUrl() {
 export const RAILWAY_API_URL = 'https://backend-indicadores-production.up.railway.app/api';
 
 console.log('🌍 Entorno:', config.isDevelopment ? 'Desarrollo' : 'Producción');
-console.log('🔗 API URL:', config.API_URL); 
+console.log('🔗 API URL:', config.API_URL);
+console.log('🔑 VITE_API_URL variable:', import.meta.env.VITE_API_URL);
+console.log('🌐 Hostname:', window.location.hostname); 
