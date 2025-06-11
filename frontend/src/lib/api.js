@@ -6,7 +6,15 @@ const getBaseUrl = () => {
   }
   
   // En producción (Vercel)
-  return import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app';
+  let envUrl = import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app';
+
+  // 🔒 Forzar HTTPS si la variable viene con http://
+  if (envUrl.startsWith('http://')) {
+    console.warn('⚠️ VITE_API_URL viene con http://, convirtiendo a https:// automáticamente');
+    envUrl = envUrl.replace('http://', 'https://');
+  }
+
+  return envUrl;
 };
 
 const baseUrl = getBaseUrl();
