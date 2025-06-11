@@ -12,13 +12,22 @@ const getBaseUrl = () => {
     }
   }
   
+  // 🔧 RECOMENDACIÓN 1: Forzar HTTPS en producción
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    if (viteApiUrl.startsWith('http://')) {
+      return viteApiUrl.replace('http://', 'https://');
+    }
+  }
+  
   return viteApiUrl;
 };
 
 const baseUrl = getBaseUrl();
 
 console.log('🔗 VITE_API_URL original:', import.meta.env.VITE_API_URL);
+console.log('🔗 process.env.VITE_API_URL:', process.env.VITE_API_URL);
 console.log('🔗 Base URL final:', baseUrl);
+console.log('🔗 Hostname actual:', window.location.hostname);
 console.log('🌍 Modo:', import.meta.env.DEV ? 'Desarrollo' : 'Producción');
 
 export const indicadoresApi = {
