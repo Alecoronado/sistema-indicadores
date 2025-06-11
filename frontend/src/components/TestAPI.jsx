@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { config } from '@/config/environment';
 
 const TestAPI = () => {
   const [datos, setDatos] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = 'https://backend-indicadores-production.up.railway.app/api';
+  const API_URL = config.API_URL;
 
   useEffect(() => {
     const fetchData = async () => {
