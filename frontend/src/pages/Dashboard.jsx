@@ -16,7 +16,6 @@ import { useIndicadores } from '@/context/IndicadoresContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import TestAPI from '@/components/TestAPI';
 
 const Dashboard = () => {
   const { indicadores, areas } = useIndicadores();
@@ -154,8 +153,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Componente de prueba para debugging */}
-      <TestAPI />
       
       {/* Panel de debugging visual */}
       <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { indicadoresApi } from '@/lib/api';
-import { config } from '@/config/environment';
 import * as XLSX from 'xlsx';
 
 const IndicadoresContext = createContext();
@@ -82,8 +81,8 @@ export const IndicadoresProvider = ({ children }) => {
         console.log('❌ CONTEXTO - Error con axios:', axiosError);
         console.log('🔍 CONTEXTO - Intentando con fetch directo (como TestAPI)...');
         
-        // Fallback: usar fetch directo pero con configuración centralizada
-        const directResponse = await fetch(`${config.API_URL}/indicadores`);
+        // Fallback: usar fetch directo con URL completa
+        const directResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/indicadores`);
         if (!directResponse.ok) {
           throw new Error(`HTTP error! status: ${directResponse.status}`);
         }

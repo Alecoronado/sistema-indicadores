@@ -1,59 +1,76 @@
-import axios from 'axios';
-import { config } from '@/config/environment';
+// 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas
+const baseUrl = import.meta.env.VITE_API_URL;
 
-// 🎯 ALTERNATIVA DIRECTA (como sugieren las mejores prácticas):
-// const baseUrl = import.meta.env.VITE_API_URL;
-// const api = axios.create({ baseURL: `${baseUrl}/api` });
-
-console.log('🔗 API URL configurada:', config.API_URL);
-console.log('🔗 Base URL:', config.BASE_URL);  
-console.log('🌍 Modo:', config.isDevelopment ? 'Desarrollo' : 'Producción');
-
-const api = axios.create({
-  baseURL: config.API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000, // 30 segundos timeout para Railway
-});
-
-// Interceptor para manejar errores
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('Error en API:', error);
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ No se puede conectar al backend. Verifica que esté corriendo.');
-    } else if (error.code === 'ENOTFOUND') {
-      console.error('❌ No se pudo resolver la URL del backend.');
-    } else if (error.response?.status === 503) {
-      console.error('❌ El backend está arrancando. Intenta en unos segundos.');
-    }
-    return Promise.reject(error);
-  }
-);
+console.log('🔗 VITE_API_URL:', baseUrl);
+console.log('🌍 Modo:', import.meta.env.DEV ? 'Desarrollo' : 'Producción');
 
 export const indicadoresApi = {
-  // Obtener todos los indicadores
-  getIndicadores: () => api.get('/indicadores'),
+  // ✅ Obtener todos los indicadores - URL COMPLETA
+  getIndicadores: async () => {
+    const url = `${baseUrl}/api/indicadores`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Obtener indicadores por área
-  getIndicadoresByArea: (area) => api.get(`/indicadores/area/${area}`),
+  // ✅ Obtener indicadores por área - URL COMPLETA
+  getIndicadoresByArea: async (area) => {
+    const url = `${baseUrl}/api/indicadores/area/${area}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Obtener un indicador específico
-  getIndicador: (id) => api.get(`/indicadores/${id}`),
+  // ✅ Obtener un indicador específico - URL COMPLETA
+  getIndicador: async (id) => {
+    const url = `${baseUrl}/api/indicadores/${id}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Crear un nuevo indicador
-  createIndicador: (data) => api.post('/indicadores', data),
+  // ✅ Crear un nuevo indicador - URL COMPLETA
+  createIndicador: async (data) => {
+    const url = `${baseUrl}/api/indicadores`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Actualizar un indicador
-  updateIndicador: (id, data) => api.put(`/indicadores/${id}`, data),
+  // ✅ Actualizar un indicador - URL COMPLETA
+  updateIndicador: async (id, data) => {
+    const url = `${baseUrl}/api/indicadores/${id}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Eliminar un indicador
-  deleteIndicador: (id) => api.delete(`/indicadores/${id}`),
+  // ✅ Eliminar un indicador - URL COMPLETA
+  deleteIndicador: async (id) => {
+    const url = `${baseUrl}/api/indicadores/${id}`;
+    const response = await fetch(url, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
   
-  // Obtener estadísticas del dashboard
-  getEstadisticas: () => api.get('/indicadores/estadisticas/dashboard'),
+  // ✅ Obtener estadísticas del dashboard - URL COMPLETA
+  getEstadisticas: async () => {
+    const url = `${baseUrl}/api/indicadores/estadisticas/dashboard`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return { data: await response.json() };
+  },
 };
 
-export default api; 
+// Ya no necesitamos axios, usamos fetch con URLs completas
+export default indicadoresApi; 
