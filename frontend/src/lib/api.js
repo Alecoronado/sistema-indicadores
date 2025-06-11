@@ -1,18 +1,25 @@
 // 🔧 SOLUCIÓN: NO usar rutas relativas, usar URLs completas con fallback
 const getBaseUrl = () => {
-  const viteApiUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
-  
-  // Si VITE_API_URL es undefined, null, o contiene literalmente "VITE_API_URL"
-  if (!viteApiUrl || viteApiUrl === 'VITE_API_URL' || viteApiUrl.includes('VITE_API_URL')) {
-    // Fallback basado en el entorno
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  let apiUrl = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  // Check if VITE_API_URL is set and meaningful
+  if (apiUrl && apiUrl !== 'VITE_API_URL' && !apiUrl.includes('VITE_API_URL')) {
+    // If it is set and we are not on localhost, ensure it's HTTPS
+    if (!isLocalhost && apiUrl.startsWith('http://')) {
+      console.log('INFO: VITE_API_URL was http, converting to https for non-local environment.');
+      apiUrl = apiUrl.replace('http://', 'https://');
+    }
+    return apiUrl;
+  } else {
+    // Fallback logic if VITE_API_URL is not set or is a placeholder
+    if (isLocalhost) {
       return 'http://localhost:8000';
     } else {
+      // Default to HTTPS for production if no VITE_API_URL is set
       return 'https://backend-indicadores-production.up.railway.app';
     }
   }
-  
-  return viteApiUrl;
 };
 
 const baseUrl = getBaseUrl();
