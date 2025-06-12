@@ -22,34 +22,19 @@ const Dashboard = () => {
   const [areaSeleccionada, setAreaSeleccionada] = useState('Todas');
   const [indicadoresFiltrados, setIndicadoresFiltrados] = useState([]);
 
-  // Log adicional para verificar props del contexto
-  console.log('🎯 DASHBOARD - Props del contexto:');
-  console.log('🎯 DASHBOARD - indicadores desde contexto:', indicadores);
-  console.log('🎯 DASHBOARD - indicadores tipo:', typeof indicadores);
-  console.log('🎯 DASHBOARD - indicadores es array?:', Array.isArray(indicadores));
-  console.log('🎯 DASHBOARD - indicadores length:', indicadores?.length);
-  console.log('🎯 DASHBOARD - areas desde contexto:', areas);
+
 
   // Filtrar indicadores cuando cambia el área seleccionada
   useEffect(() => {
-    console.log('🔍 DASHBOARD - useEffect ejecutándose');
-    console.log('🔍 DASHBOARD - indicadores:', indicadores);
-    console.log('🔍 DASHBOARD - areaSeleccionada:', areaSeleccionada);
-    console.log('🔍 DASHBOARD - indicadores es array?:', Array.isArray(indicadores));
-    console.log('🔍 DASHBOARD - indicadores length:', indicadores?.length);
-    
     if (!Array.isArray(indicadores)) {
-      console.warn('⚠️ DASHBOARD - indicadores no es array, seteando []');
       setIndicadoresFiltrados([]);
       return;
     }
     
     if (areaSeleccionada === 'Todas') {
-      console.log('✅ DASHBOARD - Mostrando todas las áreas');
       setIndicadoresFiltrados(indicadores);
     } else {
       const filtrados = indicadores.filter(ind => ind && ind.area === areaSeleccionada);
-      console.log('✅ DASHBOARD - Filtrados por área:', filtrados);
       setIndicadoresFiltrados(filtrados);
     }
   }, [indicadores, areaSeleccionada]);

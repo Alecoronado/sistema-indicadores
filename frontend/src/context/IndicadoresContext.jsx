@@ -61,53 +61,14 @@ export const IndicadoresProvider = ({ children }) => {
       
       let dataToUse = [];
       
-      try {
-        // Intentar primero con axios
-        console.log('🔍 CONTEXTO - Intentando con axios...');
-        const response = await indicadoresApi.getIndicadores();
-        console.log('🔍 CONTEXTO - Respuesta de axios:', response);
-        console.log('🔍 CONTEXTO - response.data:', response.data);
-        console.log('🔍 CONTEXTO - Tipo de response.data:', typeof response.data);
-        console.log('🔍 CONTEXTO - Es array response.data?:', Array.isArray(response.data));
-        
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          console.log('✅ CONTEXTO - Axios funcionó correctamente');
-          dataToUse = response.data;
-        } else {
-          console.log('⚠️ CONTEXTO - Axios no devolvió array válido, intentando fetch...');
-          throw new Error('Axios no devolvió datos válidos');
-        }
-      } catch (axiosError) {
-        console.log('❌ CONTEXTO - Error con axios:', axiosError);
-        console.log('🔍 CONTEXTO - Intentando con fetch directo (como TestAPI)...');
-        
-        // Fallback: usar fetch directo con URL hardcodeada (más confiable)
-        console.log('🧪 CONTEXTO - Probando fetch directo...');
-        const directResponse = await fetch('https://backend-indicadores-production.up.railway.app/api/indicadores', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-        console.log('🧪 CONTEXTO - Response status:', directResponse.status);
-        console.log('🧪 CONTEXTO - Response headers:', Object.fromEntries(directResponse.headers.entries()));
-        
-        if (!directResponse.ok) {
-          throw new Error(`HTTP error! status: ${directResponse.status}`);
-        }
-        const directData = await directResponse.json();
-        console.log('✅ CONTEXTO - Fetch directo funcionó:', directData);
-        console.log('🔍 CONTEXTO - Tipo directo:', typeof directData);
-        console.log('🔍 CONTEXTO - Es array directo?:', Array.isArray(directData));
-        console.log('🔍 CONTEXTO - Longitud directo:', directData?.length);
-        
-        if (Array.isArray(directData)) {
-          dataToUse = directData;
-          console.log('✅ CONTEXTO - Usando datos de fetch directo');
-        } else {
-          throw new Error('Ni axios ni fetch devolvieron datos válidos');
-        }
+      const response = await indicadoresApi.getIndicadores();
+      console.log('🔍 CONTEXTO - Respuesta de la API:', response);
+      
+      if (Array.isArray(response.data)) {
+        dataToUse = response.data;
+        console.log('✅ CONTEXTO - API funcionó correctamente, datos cargados:', dataToUse.length);
+      } else {
+        throw new Error('La API no devolvió un array válido de indicadores');
       }
       
       // Log detallado de estructura si hay datos
@@ -165,14 +126,15 @@ export const IndicadoresProvider = ({ children }) => {
     } catch (err) {
       let errorMessage = 'Error al crear el indicador';
       
-      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+      if (err.message.includes('Failed to fetch') || err.message.includes('Network')) {
         errorMessage = 'No se puede conectar al servidor. Verifique que el backend esté corriendo.';
-      } else if (err.response) {
-        // Error del servidor con respuesta
-        errorMessage = `Error del servidor: ${err.response.status} - ${err.response.data?.detail || err.response.statusText}`;
-      } else if (err.request) {
-        // Error de red sin respuesta
-        errorMessage = 'No se recibió respuesta del servidor. Verifique su conexión de red.';
+      } else if (err.message.includes('HTTP')) {
+        // Error del servidor con respuesta (tu nueva API estructura)
+        errorMessage = `Error del servidor: ${err.message}`;
+      } else if (err.message.includes('Mixed Content')) {
+        errorMessage = 'Error de seguridad: Protocolo HTTPS/HTTP mixto. Contacte al administrador.';
+      } else {
+        errorMessage = `Error: ${err.message}`;
       }
       
       setError(errorMessage);
