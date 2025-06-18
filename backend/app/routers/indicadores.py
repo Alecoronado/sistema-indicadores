@@ -93,7 +93,7 @@ def get_estadisticas_endpoint(db: Session = Depends(get_db)):
     return get_estadisticas(db)
 
 @router.post("/cargar-datos")
-def cargar_datos_endpoint():
+def cargar_datos_endpoint(db: Session = Depends(get_db)):
     """Endpoint para cargar DATOS REALES de la organización (del Excel original)"""
     try:
         # Importar y ejecutar la función de carga de datos reales
@@ -104,25 +104,23 @@ def cargar_datos_endpoint():
         parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sys.path.append(parent_dir)
         
-        from cargar_datos_reales import cargar_datos_reales
+        from cargar_datos import verificar_y_cargar_datos_automatico
         
-        # Capturar output en variable
-        import io
-        import contextlib
+        # Ejecutar carga automática
+        result = verificar_y_cargar_datos_automatico()
         
-        output_buffer = io.StringIO()
-        
-        with contextlib.redirect_stdout(output_buffer):
-            result = cargar_datos_reales()
-        
-        output = output_buffer.getvalue()
-        
-        return {
-            "success": True,
-            "message": "Datos reales de la organización cargados correctamente",
-            "output": output,
-            "data": result
-        }
+        if result:
+            return {
+                "success": True,
+                "message": "Datos reales de la organización cargados correctamente",
+                "data_loaded": True
+            }
+        else:
+            return {
+                "success": True,
+                "message": "Los datos ya estaban cargados en la base de datos",
+                "data_loaded": False
+            }
         
     except Exception as e:
         return {

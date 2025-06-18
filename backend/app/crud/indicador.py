@@ -68,13 +68,15 @@ def get_estadisticas(db: Session):
     total_indicadores = db.query(func.count(Indicador.id)).scalar()
     total_hitos = db.query(func.count(Hito.id)).scalar()
     hitos_completados = db.query(func.count(Hito.id)).filter(Hito.estadoHito == "Completado").scalar()
-    hitos_en_proceso = db.query(func.count(Hito.id)).filter(Hito.estadoHito == "En Proceso").scalar()
+    hitos_en_progreso = db.query(func.count(Hito.id)).filter(Hito.estadoHito == "En Progreso").scalar()
+    hitos_por_comenzar = db.query(func.count(Hito.id)).filter(Hito.estadoHito == "Por Comenzar").scalar()
     promedio_avance = db.query(func.avg(Hito.avanceHito)).scalar() or 0
 
     return {
         "totalIndicadores": total_indicadores,
         "totalHitos": total_hitos,
         "hitosCompletados": hitos_completados,
-        "hitosEnProceso": hitos_en_proceso,
+        "hitosEnProgreso": hitos_en_progreso,
+        "hitosPorComenzar": hitos_por_comenzar,
         "promedioAvance": round(promedio_avance, 2)
     } 
