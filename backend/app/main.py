@@ -47,6 +47,7 @@ def get_allowed_origins():
         # Agregar URLs específicas conocidas de Railway
         specific_frontend_urls = [
             "https://sistema-indicadores--b.up.railway.app",  # URL actual del frontend
+            "https://sistema-indicadores-production-0b2b.up.railway.app",  # URL alternativa
             "https://sistema-indicadores-production.up.railway.app",
             "https://frontend-sistema-indicadores-production.up.railway.app",
         ]
