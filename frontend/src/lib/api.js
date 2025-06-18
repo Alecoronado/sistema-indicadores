@@ -135,15 +135,39 @@ async function secureApiCall(endpoint, options = {}) {
       ...(options.headers || {})
     };
     
-    // 🚀 Ejecutar fetch
-    const response = await fetch(fullUrl, {
-      ...options,
-      headers: finalHeaders,
-      // ✅ Configuraciones adicionales de seguridad
-      mode: 'cors',
-      credentials: 'omit', // No enviar cookies por defecto
-      cache: 'no-cache'
-    });
+    // 🚀 Ejecutar fetch primera vez
+    let response;
+    
+    try {
+      response = await fetch(fullUrl, {
+        ...options,
+        headers: finalHeaders,
+        // ✅ Configuraciones adicionales de seguridad
+        mode: 'cors',
+        credentials: 'omit', // No enviar cookies por defecto
+        cache: 'no-cache'
+      });
+    } catch (fetchError) {
+      // 🛡️ SI FALLA POR MIXED CONTENT, INTERCEPTAR Y REINTENTAR
+      if (fetchError.message.includes('Mixed Content') || 
+          fetchError.message.includes('insecure') ||
+          fullUrl.includes('http://')) {
+        
+        console.log('🔒 [API] Error Mixed Content detectado, forzando HTTPS...');
+        const httpsUrl = fullUrl.replace('http://', 'https://');
+        console.log(`🔒 [API] Reintentando con: ${httpsUrl}`);
+        
+        response = await fetch(httpsUrl, {
+          ...options,
+          headers: finalHeaders,
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+      } else {
+        throw fetchError;
+      }
+    }
     
     // 🚨 VERIFICACIÓN CRÍTICA: Mixed Content
     if (window.location.protocol === 'https:' && response.url.startsWith('http://')) {
