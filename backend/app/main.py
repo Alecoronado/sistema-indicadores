@@ -136,6 +136,14 @@ print(f"🔒 CORS configurado con middleware personalizado para Railway")
 async def add_security_headers(request, call_next):
     response = await call_next(request)
     
+    # 🚀 RAILWAY: Forzar HTTPS en producción
+    if os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT_NAME"):
+        # Forzar HTTPS en Railway
+        if request.headers.get("x-forwarded-proto") == "http":
+            # Redirigir a HTTPS
+            https_url = str(request.url).replace("http://", "https://", 1)
+            return Response(status_code=307, headers={"Location": https_url})
+    
     # Headers de seguridad (solo en producción)
     if os.getenv("ENVIRONMENT") == "production":
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -144,6 +152,8 @@ async def add_security_headers(request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Content-Security-Policy"] = "default-src 'self'"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # 🔒 Railway: Forzar HTTPS siempre
+        response.headers["X-Railway-Force-HTTPS"] = "1"
     
     # UTF-8 para JSON
     if "application/json" in response.headers.get("content-type", ""):
