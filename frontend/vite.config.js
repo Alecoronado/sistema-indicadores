@@ -17,7 +17,10 @@ export default defineConfig({
 		port: process.env.PORT || 3000,
 		allowedHosts: [
 			'healthcheck.railway.app',
-			'sistema-indicadores-production.up.railway.app'
+			'sistema-indicadores-production.up.railway.app',
+			'sistema-indicadores-production-0b2b.up.railway.app',
+			// Permitir cualquier subdominio de railway.app
+			/\.railway\.app$/
 		],
 	},
 	build: {
