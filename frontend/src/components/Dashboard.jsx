@@ -22,25 +22,7 @@ const Dashboard = () => {
   const [areaSeleccionada, setAreaSeleccionada] = useState('Todas');
   const [indicadoresFiltrados, setIndicadoresFiltrados] = useState([]);
 
-  // 🧪 DEBUG: Test directo de fetch en Dashboard
-  useEffect(() => {
-    console.log('🧪 DASHBOARD - Test directo de fetch...');
-    fetch('https://backend-indicadores-production.up.railway.app/api/indicadores')
-      .then(response => {
-        console.log('🧪 DASHBOARD - Response status:', response.status);
-        console.log('🧪 DASHBOARD - Response ok:', response.ok);
-        return response.json();
-      })
-      .then(data => {
-        console.log('🧪 DASHBOARD - Datos directos:', data);
-        console.log('🧪 DASHBOARD - Tipo de datos directos:', typeof data);
-        console.log('🧪 DASHBOARD - Es array directo?:', Array.isArray(data));
-        console.log('🧪 DASHBOARD - Longitud directa:', data?.length);
-      })
-      .catch(error => {
-        console.error('🧪 DASHBOARD - Error en test directo:', error);
-      });
-  }, []);
+  // ✅ FETCH ELIMINADO - Usando solo indicadoresApi.js para prevenir Mixed Content
 
   // Log adicional para verificar props del contexto
   console.log('🎯 DASHBOARD - Props del contexto:');
