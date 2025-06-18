@@ -11,10 +11,10 @@ const ENV_CONFIG = {
     protocol: 'http'
   },
   production: {
-    // 🎯 Intentar múltiples fuentes para la URL del backend
+    // 🎯 FORZAR URL HTTPS HARDCODED COMO ÚLTIMO RECURSO
     backendUrl: import.meta.env.VITE_API_URL || 
                 process.env.VITE_API_URL ||
-                detectBackendUrl(),
+                'https://backend-indicadores-production.up.railway.app', // HARDCODED HTTPS
     protocol: 'https',
     enforceHttps: true
   }
@@ -24,23 +24,24 @@ const ENV_CONFIG = {
 function detectBackendUrl() {
   const currentDomain = window.location.hostname;
   
-  // Lista de posibles URLs de backend basadas en el dominio actual
+  // 🚨 SOLUCIÓN TEMPORAL: Forzar HTTPS siempre
+  const baseBackendUrl = 'backend-indicadores-production.up.railway.app';
+  const httpsUrl = `https://${baseBackendUrl}`;
+  
+  console.log('🔒 [API] Forzando URL HTTPS del backend:', httpsUrl);
+  
+  // Lista de posibles URLs de backend (todas HTTPS)
   const possibleBackendUrls = [
-    // Si estamos en Railway frontend, intentar backend Railway
-    currentDomain.includes('railway.app') ? 
-      `https://${currentDomain.replace('frontend', 'backend').replace('sistema-indicadores', 'backend-indicadores')}` : null,
-    
-    // URLs comunes de Railway
-    'https://backend-indicadores-production.up.railway.app',
+    httpsUrl, // URL principal forzada a HTTPS
     'https://sistema-indicadores-backend-production.up.railway.app',
     'https://backend-sistema-indicadores-production.up.railway.app',
     
-    // Fallback local para desarrollo
-    'http://localhost:8000'
+    // Solo para desarrollo local
+    currentDomain.includes('localhost') ? 'http://localhost:8000' : null
   ].filter(Boolean);
   
   console.log('🔍 [API] URLs de backend detectadas:', possibleBackendUrls);
-  return possibleBackendUrls[0] || 'https://backend-indicadores-production.up.railway.app';
+  return possibleBackendUrls[0];
 }
 
 /* ================================================================
@@ -112,9 +113,20 @@ async function secureApiCall(endpoint, options = {}) {
   let fullUrl = `${BASE_URL}${endpoint}`;
   
   // 🛡️ VERIFICACIÓN CRÍTICA: Forzar HTTPS en producción
-  if (window.location.protocol === 'https:' && fullUrl.startsWith('http://')) {
+  if (window.location.protocol === 'https:') {
+    if (fullUrl.startsWith('http://')) {
+      fullUrl = fullUrl.replace('http://', 'https://');
+      console.log('🔒 [API] Mixed Content prevención - Convertido a HTTPS:', fullUrl);
+    } else if (!fullUrl.startsWith('https://')) {
+      fullUrl = 'https://' + fullUrl;
+      console.log('🔒 [API] Mixed Content prevención - Añadido protocolo HTTPS:', fullUrl);
+    }
+  }
+  
+  // 🚨 VERIFICACIÓN EXTRA: Asegurar que NUNCA usemos HTTP en producción
+  if (fullUrl.startsWith('http://') && !fullUrl.includes('localhost')) {
     fullUrl = fullUrl.replace('http://', 'https://');
-    console.log('🔒 [API] Mixed Content prevención - Convertido a HTTPS:', fullUrl);
+    console.error('🚨 [API] CRÍTICO: Detectado HTTP en producción, forzando HTTPS:', fullUrl);
   }
   
   console.log(`📡 [API] Request: ${options.method || 'GET'} ${fullUrl}`);
