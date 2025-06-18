@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { indicadoresApi } from '@/lib/api';
-import * as XLSX from 'xlsx';
 
 const IndicadoresContext = createContext();
 

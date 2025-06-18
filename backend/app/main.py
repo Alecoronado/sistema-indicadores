@@ -26,24 +26,22 @@ async def add_utf8_headers(request, call_next):
 
 # Configuración CORS para producción
 if os.getenv("RAILWAY_ENVIRONMENT_NAME"):
-    # Producción en Railway - CORS específico para Vercel + Railway + localhost
+    # Producción en Railway - CORS específico y seguro
     allowed_origins = [
-        "https://*.vercel.app",           # 🚀 VERCEL
-        "https://sistema-indicadores-git-main-alecoronados-projects.vercel.app",  # Vercel específico
-        "https://sistema-indicadores-alecoronados-projects.vercel.app",  # Vercel específico
-        "https://*.railway.app", 
-        "https://*.up.railway.app",
-        "http://localhost:5173",
-        "http://localhost:3000",
         "https://sistema-indicadores-production.up.railway.app",  # Railway frontend específico
+        "https://*.vercel.app",           # Vercel
+        "https://sistema-indicadores-git-main-alecoronados-projects.vercel.app",
+        "https://sistema-indicadores-alecoronados-projects.vercel.app",
+        "http://localhost:5173",  # Solo para testing local
+        "http://localhost:3000",  # Solo para testing local
     ]
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # 🚀 TEMPORAL: Permitir todos los orígenes para debug
+        allow_origins=allowed_origins,  # ✅ SEGURO: Orígenes específicos solamente
         allow_credentials=False,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
+        allow_headers=["Content-Type", "Authorization", "Accept"],  # ✅ Headers específicos
     )
 else:
     # Desarrollo local - CORS abierto
@@ -54,6 +52,25 @@ else:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# ✅ NUEVO: Middleware de seguridad
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    
+    # Headers de seguridad
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # UTF-8 para JSON
+    if "application/json" in response.headers.get("content-type", ""):
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    
+    return response
 
 # Incluir routers con prefijo /api
 app.include_router(indicadores.router, prefix="/api")

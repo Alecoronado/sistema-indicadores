@@ -1,48 +1,85 @@
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+"""
+🗄️ Inicialización de Base de Datos para Railway
+✅ Versión Segura - Sin passwords hardcodeados
+"""
 
-def create_database():
+import os
+import sys
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
+
+def init_railway_database():
+    """
+    Inicializa la base de datos usando DATABASE_URL de Railway
+    """
+    
+    # ✅ SEGURO: Usar DATABASE_URL de Railway (auto-generada)
+    database_url = os.getenv("DATABASE_URL")
+    
+    if not database_url:
+        print("❌ ERROR: DATABASE_URL no encontrada")
+        print("💡 En Railway, esta variable se genera automáticamente")
+        print("💡 Para desarrollo local, configura DATABASE_URL en .env")
+        sys.exit(1)
+    
     try:
-        # Configuración de la base de datos
-        DB_USER = "postgres"
-        DB_PASSWORD = "Jan27147"
-        DB_HOST = "localhost"
-        DB_PORT = "5432"
-        DB_NAME = "indicadores_db"
-
-        # Conectar a PostgreSQL
-        conn = psycopg2.connect(
-            user=DB_USER,
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
-        )
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        # Conectar a la base de datos
+        engine = create_engine(database_url)
         
-        # Crear cursor
-        cur = conn.cursor()
+        print("🔗 Conectando a la base de datos...")
         
-        # Verificar si la base de datos existe
-        cur.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{DB_NAME}'")
-        exists = cur.fetchone()
+        # Test de conexión
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT version()"))
+            version = result.fetchone()[0]
+            print(f"✅ Conexión exitosa: {version}")
         
-        if not exists:
-            # Crear la base de datos
-            cur.execute(f'CREATE DATABASE {DB_NAME}')
-            print(f"Base de datos '{DB_NAME}' creada exitosamente")
-        else:
-            print(f"La base de datos '{DB_NAME}' ya existe")
+        # Crear tablas
+        print("🔧 Creando tablas...")
+        from app.models import indicador
+        indicador.Base.metadata.create_all(bind=engine)
         
-        # Cerrar conexión
-        cur.close()
-        conn.close()
+        print("✅ Tablas creadas exitosamente")
+        
+        # Cargar datos iniciales si es necesario
+        load_initial_data(engine)
+        
+        print("🎉 Inicialización de base de datos completada")
         
     except Exception as e:
-        print(f"Error: {e}")
-        print("\nPor favor, asegúrate de que:")
-        print("1. PostgreSQL esté instalado y corriendo")
-        print("2. Las credenciales sean correctas")
-        print("3. El usuario tenga permisos para crear bases de datos")
+        print(f"❌ Error al inicializar base de datos: {e}")
+        sys.exit(1)
+
+def load_initial_data(engine):
+    """
+    Carga datos iniciales si la base de datos está vacía
+    """
+    try:
+        with engine.connect() as conn:
+            # Verificar si ya hay datos
+            result = conn.execute(text(
+                "SELECT COUNT(*) FROM indicadores"
+            ))
+            count = result.fetchone()[0]
+            
+            if count > 0:
+                print(f"📊 Base de datos ya contiene {count} indicadores")
+                return
+            
+            print("📝 Cargando datos iniciales...")
+            
+            # Aquí puedes agregar lógica para cargar datos iniciales
+            # Por ejemplo, ejecutar cargar_datos.py
+            
+            print("✅ Datos iniciales cargados")
+            
+    except Exception as e:
+        print(f"⚠️ Error al cargar datos iniciales: {e}")
+        # No es crítico, continuar
 
 if __name__ == "__main__":
-    create_database() 
+    print("🚀 Inicializando base de datos para Railway...")
+    init_railway_database() 

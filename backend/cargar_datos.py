@@ -57,14 +57,65 @@ def convertir_fecha(fecha_valor):
     
     return fecha_valor
 
-def main():
-    print("=" * 50)
-    print("📖 Cargando datos reales a Railway...")
+def verificar_y_cargar_datos_automatico():
+    """Verificar si hay datos y cargar automáticamente si está vacío"""
+    try:
+        session, engine = crear_session()
+        
+        # Verificar si ya hay datos
+        count_indicadores = session.query(Indicador).count()
+        print(f"📊 Indicadores existentes: {count_indicadores}")
+        
+        if count_indicadores > 0:
+            print("✅ Ya hay datos en la base. No es necesario cargar.")
+            return False
+        
+        print("🔄 Base de datos vacía. Cargando datos automáticamente...")
+        
+        # Buscar archivo Excel en múltiples ubicaciones
+        excel_files_to_try = [
+            'Base de datos.xlsx',
+            './Base de datos.xlsx', 
+            'backend/Base de datos.xlsx',
+            os.path.join(os.path.dirname(__file__), 'Base de datos.xlsx'),
+            '/app/backend/Base de datos.xlsx'  # Railway path
+        ]
+        
+        excel_file = None
+        for file_path in excel_files_to_try:
+            if os.path.exists(file_path):
+                excel_file = file_path
+                print(f"✅ Archivo encontrado en: {file_path}")
+                break
+        
+        if not excel_file:
+            print(f"❌ No se encuentra el archivo 'Base de datos.xlsx' en ninguna ubicación:")
+            for path in excel_files_to_try:
+                print(f"   - {path}")
+            return False
+        
+        # Cargar datos usando la función principal
+        return cargar_datos_desde_excel(excel_file, session, limpiar_existentes=False)
+        
+    except Exception as e:
+        print(f"❌ Error en verificación automática: {e}")
+        return False
+    finally:
+        if 'session' in locals():
+            session.close()
+
+def cargar_datos_desde_excel(excel_file='Base de datos.xlsx', session=None, limpiar_existentes=True):
+    """Función unificada para cargar datos desde Excel"""
+    session_propia = session is None
     
     try:
+        if session_propia:
+            session, engine = crear_session()
+            print("✅ Conectado a Railway!")
+        
         # Leer Excel
-        print("📊 Leyendo archivo Excel...")
-        df = pd.read_excel('Base de datos.xlsx')
+        print(f"📊 Leyendo archivo Excel: {excel_file}")
+        df = pd.read_excel(excel_file)
         print(f"📋 Datos leídos: {len(df)} filas")
         
         # Corrección específica para fecha problemática
@@ -74,14 +125,12 @@ def main():
             df.loc[fecha_problema, 'Fecha Finalizacion'] = '2025-12-31'
             print("✅ Fecha corregida automáticamente")
         
-        session, engine = crear_session()
-        print("✅ Conectado a Railway!")
-        
-        print("🗑️  Limpiando datos existentes...")
-        session.query(Hito).delete()
-        session.query(Indicador).delete()
-        session.commit()
-        print("✅ Datos limpiados")
+        if limpiar_existentes:
+            print("🗑️  Limpiando datos existentes...")
+            session.query(Hito).delete()
+            session.query(Indicador).delete()
+            session.commit()
+            print("✅ Datos limpiados")
         
         # Agrupar por indicador
         indicadores_grupos = df.groupby('Indicador')
@@ -157,14 +206,29 @@ def main():
             for hito in hitos_muestra:
                 print(f"  {hito.nombreHito}: {hito.fechaInicioHito} → {hito.fechaFinalizacionHito}")
         
-        session.close()
         print("🚀 ¡Ya puedes verificar los datos en Railway!")
+        return True
         
     except Exception as e:
         print(f"❌ Error: {e}")
         if 'session' in locals():
             session.rollback()
+        return False
+    finally:
+        if session_propia and 'session' in locals():
             session.close()
+
+def main():
+    """Función principal para carga manual de datos"""
+    print("=" * 50)
+    print("📖 Cargando datos reales a Railway...")
+    
+    resultado = cargar_datos_desde_excel(limpiar_existentes=True)
+    
+    if resultado:
+        print("=" * 50)
+    else:
+        print("❌ Error en la carga de datos")
 
 if __name__ == "__main__":
     main() 

@@ -1,97 +1,261 @@
-// 🚀 VERCEL: Configuración simplificada y robusta
-const getBaseUrl = () => {
-  // En desarrollo local
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8000';
-  }
-  
-  // En producción (Vercel)
-  let envUrl = import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app';
+// src/lib/api/indicadoresApi.js
+/* ================================================================
+   ✅ SOLUCIÓN DEFINITIVA PARA MIXED CONTENT Y URLS
+   ================================================================ */
 
-  // 🔒 Forzar HTTPS si la variable viene con http://
-  if (envUrl.startsWith('http://')) {
-    console.warn('⚠️ VITE_API_URL viene con http://, convirtiendo a https:// automáticamente');
-    envUrl = envUrl.replace('http://', 'https://');
+// 🔧 CONFIGURACIÓN DE ENTORNOS
+const ENV_CONFIG = {
+  development: {
+    hostnames: ['localhost', '127.0.0.1'],
+    backendUrl: 'http://localhost:8000',
+    protocol: 'http'
+  },
+  production: {
+    backendUrl: import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app',
+    protocol: 'https',
+    enforceHttps: true
   }
-
-  return envUrl;
 };
 
-const baseUrl = getBaseUrl();
+/* ================================================================
+   🚀 DETECCIÓN INTELIGENTE DE ENTORNO
+   ================================================================ */
+function detectEnvironment() {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // ✅ Desarrollo local
+  if (ENV_CONFIG.development.hostnames.includes(hostname)) {
+    console.log('🔧 [API] Entorno: DESARROLLO LOCAL');
+    return {
+      env: 'development',
+      baseUrl: ENV_CONFIG.development.backendUrl,
+      protocol: ENV_CONFIG.development.protocol
+    };
+  }
+  
+  // ✅ Producción (Railway, Vercel, etc.)
+  console.log('🚀 [API] Entorno: PRODUCCIÓN');
+  let backendUrl = ENV_CONFIG.production.backendUrl.trim();
+  
+  // Asegurar protocolo HTTPS en producción
+  if (!/^https?:\/\//i.test(backendUrl)) {
+    backendUrl = `https://${backendUrl}`;
+  }
+  
+  // Forzar HTTPS si la página actual usa HTTPS
+  if (protocol === 'https:' && backendUrl.startsWith('http://')) {
+    backendUrl = backendUrl.replace('http://', 'https://');
+    console.log('🔒 [API] Forzando HTTPS para evitar Mixed Content');
+  }
+  
+  // Remover trailing slash
+  backendUrl = backendUrl.replace(/\/+$/, '');
+  
+  return {
+    env: 'production',
+    baseUrl: backendUrl,
+    protocol: 'https'
+  };
+}
 
-console.log('🔗 VITE_API_URL original:', import.meta.env.VITE_API_URL);
-console.log('🔗 process.env.VITE_API_URL:', process.env.VITE_API_URL);
-console.log('🔗 Base URL final:', baseUrl);
-console.log('🔗 Hostname actual:', window.location.hostname);
-console.log('🌍 Modo:', import.meta.env.DEV ? 'Desarrollo' : 'Producción');
+// 🌍 Configuración global
+const API_CONFIG = detectEnvironment();
+const BASE_URL = API_CONFIG.baseUrl;
 
+console.log(`✅ [API] Configuración: ${BASE_URL}`);
+
+/* ================================================================
+   🛡️ WRAPPER FETCH CON PROTECCIÓN MIXED CONTENT
+   ================================================================ */
+async function secureApiCall(endpoint, options = {}) {
+  const fullUrl = `${BASE_URL}${endpoint}`;
+  
+  console.log(`📡 [API] Request: ${options.method || 'GET'} ${fullUrl}`);
+  
+  try {
+    // ✅ Configuración de headers por defecto
+    const defaultHeaders = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      // 🔒 Headers de seguridad
+      'X-Requested-With': 'XMLHttpRequest',
+      'Cache-Control': 'no-cache'
+    };
+    
+    // 🔧 Merge headers
+    const finalHeaders = {
+      ...defaultHeaders,
+      ...(options.headers || {})
+    };
+    
+    // 🚀 Ejecutar fetch
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers: finalHeaders,
+      // ✅ Configuraciones adicionales de seguridad
+      mode: 'cors',
+      credentials: 'omit', // No enviar cookies por defecto
+      cache: 'no-cache'
+    });
+    
+    // 🚨 VERIFICACIÓN CRÍTICA: Mixed Content
+    if (window.location.protocol === 'https:' && response.url.startsWith('http://')) {
+      const mixedContentError = `❌ MIXED CONTENT DETECTADO: 
+      - Página: ${window.location.protocol}//${window.location.host}
+      - API: ${response.url}
+      - Solución: Configurar VITE_API_URL con HTTPS`;
+      
+      console.error(mixedContentError);
+      throw new Error('Mixed Content: La API debe usar HTTPS cuando el frontend usa HTTPS');
+    }
+    
+    // ✅ Verificar respuesta HTTP
+    if (!response.ok) {
+      let errorBody;
+      const contentType = response.headers.get('content-type');
+      
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          errorBody = await response.json();
+        } else {
+          errorBody = await response.text();
+        }
+      } catch (parseError) {
+        errorBody = `Error ${response.status}: ${response.statusText}`;
+      }
+      
+      console.error(`❌ [API] Error ${response.status}:`, errorBody);
+      throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorBody)}`);
+    }
+    
+    // ✅ Procesar respuesta exitosa
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
+    
+    console.log(`✅ [API] Success: ${options.method || 'GET'} ${endpoint}`);
+    return { data, response };
+    
+  } catch (error) {
+    // 🚨 Manejo de errores robusto
+    console.error(`❌ [API] Error en ${endpoint}:`, error);
+    
+    // Errores específicos para mejor debugging
+    if (error.message.includes('Mixed Content')) {
+      throw new Error(`🔒 Mixed Content: Verifica que VITE_API_URL use HTTPS en producción`);
+    }
+    
+    if (error.message.includes('CORS')) {
+      throw new Error(`🌐 CORS Error: El backend debe permitir el origen ${window.location.origin}`);
+    }
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error(`🌐 Network Error: No se puede conectar con ${BASE_URL}`);
+    }
+    
+    throw error;
+  }
+}
+
+/* ================================================================
+   📋 API ENDPOINTS - SISTEMA DE INDICADORES
+   ================================================================ */
 export const indicadoresApi = {
-  // ✅ Obtener todos los indicadores - URL COMPLETA
+  // 📊 GET /api/indicadores - Obtener todos los indicadores
   getIndicadores: async () => {
-    const url = `${baseUrl}/api/indicadores`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    const result = await secureApiCall('/api/indicadores');
+    return result.data;
   },
-  
-  // ✅ Obtener indicadores por área - URL COMPLETA
+
+  // 🏢 GET /api/indicadores/area/:area - Indicadores por área
   getIndicadoresByArea: async (area) => {
-    const url = `${baseUrl}/api/indicadores/area/${area}`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    const encodedArea = encodeURIComponent(area);
+    const result = await secureApiCall(`/api/indicadores/area/${encodedArea}`);
+    return result.data;
   },
-  
-  // ✅ Obtener un indicador específico - URL COMPLETA
+
+  // 🔍 GET /api/indicadores/:id - Indicador específico
   getIndicador: async (id) => {
-    const url = `${baseUrl}/api/indicadores/${id}`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    const result = await secureApiCall(`/api/indicadores/${id}`);
+    return result.data;
   },
-  
-  // ✅ Crear un nuevo indicador - URL COMPLETA
+
+  // ➕ POST /api/indicadores - Crear indicador
   createIndicador: async (data) => {
-    const url = `${baseUrl}/api/indicadores`;
-    const response = await fetch(url, {
+    const result = await secureApiCall('/api/indicadores', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    return result.data;
   },
-  
-  // ✅ Actualizar un indicador - URL COMPLETA
+
+  // ✏️ PUT /api/indicadores/:id - Actualizar indicador
   updateIndicador: async (id, data) => {
-    const url = `${baseUrl}/api/indicadores/${id}`;
-    const response = await fetch(url, {
+    const result = await secureApiCall(`/api/indicadores/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    return result.data;
   },
-  
-  // ✅ Eliminar un indicador - URL COMPLETA
+
+  // 🗑️ DELETE /api/indicadores/:id - Eliminar indicador
   deleteIndicador: async (id) => {
-    const url = `${baseUrl}/api/indicadores/${id}`;
-    const response = await fetch(url, {
-      method: 'DELETE',
+    const result = await secureApiCall(`/api/indicadores/${id}`, {
+      method: 'DELETE'
     });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    return result.data;
   },
-  
-  // ✅ Obtener estadísticas del dashboard - URL COMPLETA
+
+  // 📈 GET /api/indicadores/estadisticas/dashboard - Estadísticas
   getEstadisticas: async () => {
-    const url = `${baseUrl}/api/indicadores/estadisticas/dashboard`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { data: await response.json() };
+    const result = await secureApiCall('/api/indicadores/estadisticas/dashboard');
+    return result.data;
   },
+
+  // 🔍 GET /health - Health check del backend
+  healthCheck: async () => {
+    const result = await secureApiCall('/health');
+    return result.data;
+  },
+
+  // 🧪 GET /test-cors - Test de CORS
+  testCors: async () => {
+    const result = await secureApiCall('/test-cors');
+    return result.data;
+  }
 };
 
-// Ya no necesitamos axios, usamos fetch con URLs completas
-export default indicadoresApi; 
+/* ================================================================
+   🛠️ UTILIDADES ADICIONALES
+   ================================================================ */
+
+// 🔧 Debug: Obtener configuración actual
+export const getApiConfig = () => ({
+  environment: API_CONFIG.env,
+  baseUrl: BASE_URL,
+  protocol: API_CONFIG.protocol,
+  currentPage: `${window.location.protocol}//${window.location.host}`,
+  timestamp: new Date().toISOString()
+});
+
+// 🧪 Test de conectividad
+export const testConnection = async () => {
+  try {
+    console.log('🧪 [API] Probando conectividad...');
+    const health = await indicadoresApi.healthCheck();
+    console.log('✅ [API] Conectividad OK:', health);
+    return { success: true, data: health };
+  } catch (error) {
+    console.error('❌ [API] Error de conectividad:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Export por defecto
+export default indicadoresApi;
