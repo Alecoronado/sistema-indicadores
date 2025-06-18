@@ -88,8 +88,8 @@ function detectEnvironment() {
     console.log('🔒 [API] Usando URL hardcoded segura:', backendUrl);
   }
   
-  // Remover trailing slash
-  backendUrl = backendUrl.replace(/\/+$/, '');
+  // Remover trailing slash y forzar HTTPS de nuevo
+  backendUrl = backendUrl.replace(/\/+$/, '').replace('http://', 'https://');
   
   console.log('✅ [API] URL final del backend:', backendUrl);
   
@@ -110,7 +110,7 @@ console.log(`✅ [API] Configuración: ${BASE_URL}`);
    🛡️ WRAPPER FETCH CON PROTECCIÓN MIXED CONTENT
    ================================================================ */
 async function secureApiCall(endpoint, options = {}) {
-  let fullUrl = `${BASE_URL}${endpoint}`;
+  let fullUrl = `${BASE_URL.replace('http://', 'https://')}${endpoint}`;
   
   // 🛡️ VERIFICACIÓN CRÍTICA: Forzar HTTPS en producción
   if (window.location.protocol === 'https:') {
