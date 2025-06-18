@@ -44,7 +44,14 @@ def get_allowed_origins():
             "http://localhost:3000",  # Testing local
         ]
         
-        # Agregar posibles URLs de producción
+        # Agregar URLs específicas conocidas de Railway
+        specific_frontend_urls = [
+            "https://sistema-indicadores--b.up.railway.app",  # URL actual del frontend
+            "https://sistema-indicadores-production.up.railway.app",
+            "https://frontend-sistema-indicadores-production.up.railway.app",
+        ]
+        
+        # Agregar posibles URLs basadas en service name
         service_name = os.getenv("RAILWAY_SERVICE_NAME", "sistema-indicadores")
         possible_frontend_urls = [
             f"https://{service_name}-frontend-production.up.railway.app",
@@ -52,38 +59,76 @@ def get_allowed_origins():
             f"https://frontend-{service_name}-production.up.railway.app",
         ]
         
-        default_origins.extend(possible_frontend_urls)
-        print(f"🔒 CORS producción automático: {default_origins}")
-        return default_origins
+        # 🚨 TEMPORAL: Permitir todos los subdominios de railway.app para resolver el issue
+        railway_patterns = [
+            "https://sistema-indicadores--production.up.railway.app",
+            "https://sistema-indicadores--staging.up.railway.app",
+        ]
+        
+        # Combinar todas las URLs
+        all_origins = default_origins + specific_frontend_urls + possible_frontend_urls + railway_patterns
+        
+        # 🔧 FALLBACK: Si no funciona, permitir todos temporalmente
+        if len(all_origins) > 10:  # Si hay muchas URLs, simplificar
+            print("🔧 CORS: Demasiadas URLs, usando patrón permisivo temporal")
+            return ["*"]
+        
+        print(f"🔒 CORS producción automático: {all_origins}")
+        return all_origins
     
     # 3️⃣ Desarrollo local - permisivo
     else:
         print("🔧 CORS desarrollo - permitir todos los orígenes")
         return ["*"]
 
-# Aplicar configuración CORS
+# 🌐 APLICAR CONFIGURACIÓN CORS CON MIDDLEWARE PERSONALIZADO
 allowed_origins = get_allowed_origins()
 
-if "*" in allowed_origins:
-    # Desarrollo - CORS completamente abierto
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    print("🔧 CORS configurado para DESARROLLO (permite todos los orígenes)")
-else:
-    # Producción - CORS específico y seguro
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=False,  # Cambiar a True si necesitas cookies
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
-    )
-    print(f"🔒 CORS configurado para PRODUCCIÓN: {allowed_origins}")
+# Middleware CORS personalizado para Railway
+@app.middleware("http")
+async def custom_cors_middleware(request, call_next):
+    # Obtener el origen de la petición
+    origin = request.headers.get("origin")
+    
+    # Ejecutar la petición
+    response = await call_next(request)
+    
+    # Determinar si permitir CORS
+    allow_cors = False
+    
+    if "*" in allowed_origins:
+        # Desarrollo - permitir todos
+        allow_cors = True
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    elif origin:
+        # Verificar si el origen está en la lista permitida
+        if origin in allowed_origins:
+            allow_cors = True
+            response.headers["Access-Control-Allow-Origin"] = origin
+        # 🚨 SOLUCIÓN RAILWAY: Permitir subdominios de railway.app
+        elif ".railway.app" in origin and origin.startswith("https://"):
+            allow_cors = True
+            response.headers["Access-Control-Allow-Origin"] = origin
+            print(f"🚀 CORS: Permitido subdominio Railway: {origin}")
+    
+    # Aplicar headers CORS si está permitido
+    if allow_cors:
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, X-Requested-With"
+        response.headers["Access-Control-Max-Age"] = "86400"
+    
+    return response
+
+# También aplicar el middleware estándar como backup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if "*" in allowed_origins else allowed_origins + ["https://*.railway.app"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+print(f"🔒 CORS configurado con middleware personalizado para Railway")
 
 # ✅ NUEVO: Middleware de seguridad
 @app.middleware("http")
