@@ -62,21 +62,35 @@ function detectEnvironment() {
   
   // ✅ Producción (Railway, Vercel, etc.)
   console.log('🚀 [API] Entorno: PRODUCCIÓN');
-  let backendUrl = ENV_CONFIG.production.backendUrl.trim();
+  console.log('🔍 [API] VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('🔍 [API] process.env.VITE_API_URL:', process.env.VITE_API_URL);
+  console.log('🔍 [API] detectBackendUrl():', detectBackendUrl());
   
-  // Asegurar protocolo HTTPS en producción
-  if (!/^https?:\/\//i.test(backendUrl)) {
-    backendUrl = `https://${backendUrl}`;
+  let backendUrl = ENV_CONFIG.production.backendUrl.trim();
+  console.log('🔍 [API] backendUrl inicial:', backendUrl);
+  
+  // 🚨 FORZAR HTTPS SIEMPRE EN PRODUCCIÓN
+  if (!backendUrl.startsWith('https://')) {
+    if (backendUrl.startsWith('http://')) {
+      backendUrl = backendUrl.replace('http://', 'https://');
+      console.log('🔒 [API] Convertido HTTP→HTTPS:', backendUrl);
+    } else if (!/^https?:\/\//i.test(backendUrl)) {
+      backendUrl = `https://${backendUrl}`;
+      console.log('🔒 [API] Añadido protocolo HTTPS:', backendUrl);
+    }
   }
   
-  // Forzar HTTPS si la página actual usa HTTPS
-  if (protocol === 'https:' && backendUrl.startsWith('http://')) {
-    backendUrl = backendUrl.replace('http://', 'https://');
-    console.log('🔒 [API] Forzando HTTPS para evitar Mixed Content');
+  // 🛡️ VERIFICACIÓN FINAL: Solo permitir HTTPS en producción
+  if (!backendUrl.startsWith('https://')) {
+    console.error('❌ [API] Backend URL no es HTTPS:', backendUrl);
+    backendUrl = 'https://backend-indicadores-production.up.railway.app';
+    console.log('🔒 [API] Usando URL hardcoded segura:', backendUrl);
   }
   
   // Remover trailing slash
   backendUrl = backendUrl.replace(/\/+$/, '');
+  
+  console.log('✅ [API] URL final del backend:', backendUrl);
   
   return {
     env: 'production',
@@ -95,7 +109,13 @@ console.log(`✅ [API] Configuración: ${BASE_URL}`);
    🛡️ WRAPPER FETCH CON PROTECCIÓN MIXED CONTENT
    ================================================================ */
 async function secureApiCall(endpoint, options = {}) {
-  const fullUrl = `${BASE_URL}${endpoint}`;
+  let fullUrl = `${BASE_URL}${endpoint}`;
+  
+  // 🛡️ VERIFICACIÓN CRÍTICA: Forzar HTTPS en producción
+  if (window.location.protocol === 'https:' && fullUrl.startsWith('http://')) {
+    fullUrl = fullUrl.replace('http://', 'https://');
+    console.log('🔒 [API] Mixed Content prevención - Convertido a HTTPS:', fullUrl);
+  }
   
   console.log(`📡 [API] Request: ${options.method || 'GET'} ${fullUrl}`);
   
