@@ -3,7 +3,7 @@
    ✅ SOLUCIÓN DEFINITIVA PARA MIXED CONTENT Y URLS
    ================================================================ */
 
-// 🔧 CONFIGURACIÓN DE ENTORNOS
+// 🔧 CONFIGURACIÓN FLEXIBLE DE ENTORNOS
 const ENV_CONFIG = {
   development: {
     hostnames: ['localhost', '127.0.0.1'],
@@ -11,11 +11,37 @@ const ENV_CONFIG = {
     protocol: 'http'
   },
   production: {
-    backendUrl: import.meta.env.VITE_API_URL || 'https://backend-indicadores-production.up.railway.app',
+    // 🎯 Intentar múltiples fuentes para la URL del backend
+    backendUrl: import.meta.env.VITE_API_URL || 
+                process.env.VITE_API_URL ||
+                detectBackendUrl(),
     protocol: 'https',
     enforceHttps: true
   }
 };
+
+// 🔍 DETECCIÓN AUTOMÁTICA DE BACKEND URL
+function detectBackendUrl() {
+  const currentDomain = window.location.hostname;
+  
+  // Lista de posibles URLs de backend basadas en el dominio actual
+  const possibleBackendUrls = [
+    // Si estamos en Railway frontend, intentar backend Railway
+    currentDomain.includes('railway.app') ? 
+      `https://${currentDomain.replace('frontend', 'backend').replace('sistema-indicadores', 'backend-indicadores')}` : null,
+    
+    // URLs comunes de Railway
+    'https://backend-indicadores-production.up.railway.app',
+    'https://sistema-indicadores-backend-production.up.railway.app',
+    'https://backend-sistema-indicadores-production.up.railway.app',
+    
+    // Fallback local para desarrollo
+    'http://localhost:8000'
+  ].filter(Boolean);
+  
+  console.log('🔍 [API] URLs de backend detectadas:', possibleBackendUrls);
+  return possibleBackendUrls[0] || 'https://backend-indicadores-production.up.railway.app';
+}
 
 /* ================================================================
    🚀 DETECCIÓN INTELIGENTE DE ENTORNO
