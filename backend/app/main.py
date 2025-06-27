@@ -10,7 +10,7 @@ from . import auth_azure
 from fastapi.security import OAuth2PasswordRequestForm
 from .auth import authenticate_user, create_access_token, Token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
-from fastapi import status, HTTPException
+from fastapi import status, HTTPException, Depends
 from .auth_ldap import authenticate_ldap_user, validate_corporate_email
 
 # Crear las tablas en la base de datos
@@ -213,9 +213,12 @@ def get_config():
         "timestamp": "2025-01-18"
     }
 
+# ✅ ENDPOINT DE LOGIN TRADICIONAL (COMENTADO TEMPORALMENTE)
+# Descomenta cuando tengas configurado el Active Directory
+"""
 @app.post("/api/auth/login", response_model=Token)
 async def login_tradicional(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Endpoint para login tradicional con credenciales corporativas"""
+    \"\"\"Endpoint para login tradicional con credenciales corporativas\"\"\"
     
     email = form_data.username
     password = form_data.password
@@ -250,4 +253,5 @@ async def login_tradicional(form_data: OAuth2PasswordRequestForm = Depends()):
         expires_delta=access_token_expires
     )
     
-    return {"access_token": access_token, "token_type": "bearer"} 
+    return {"access_token": access_token, "token_type": "bearer"}
+""" 
