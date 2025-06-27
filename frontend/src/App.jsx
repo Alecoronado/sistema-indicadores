@@ -8,6 +8,7 @@ import ActualizarIndicador from '@/pages/ActualizarIndicador';
 import HistorialIndicadores from '@/pages/HistorialIndicadores';
 import GanttSyncfusion from '@/pages/GanttSyncfusion';
 import Login from '@/pages/Login';
+import Callback from '@/pages/Callback';
 import { IndicadoresProvider } from '@/context/IndicadoresContext';
 import { useIsAuthenticated } from '@azure/msal-react';
 
@@ -25,6 +26,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/callback" element={<Callback />} />
           <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/nuevo-indicador" element={<RequireAuth><NuevoIndicador /></RequireAuth>} />
           <Route path="/actualizar-indicador" element={<RequireAuth><ActualizarIndicador /></RequireAuth>} />
