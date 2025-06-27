@@ -56,55 +56,25 @@ export const IndicadoresProvider = ({ children }) => {
   const cargarIndicadores = async () => {
     try {
       setLoading(true);
-      console.log('🔍 CONTEXTO - Cargando indicadores...');
       
       let dataToUse = [];
       
       const response = await indicadoresApi.getIndicadores();
-      console.log('🔍 CONTEXTO - Respuesta de la API:', response);
       
       if (Array.isArray(response)) {
         dataToUse = response;
-        console.log('✅ CONTEXTO - API funcionó correctamente, datos cargados:', dataToUse.length);
       } else {
         throw new Error('La API no devolvió un array válido de indicadores');
       }
       
-      // Log detallado de estructura si hay datos
-      if (Array.isArray(dataToUse) && dataToUse.length > 0) {
-        console.log('🔍 CONTEXTO - Primer indicador completo:', dataToUse[0]);
-        console.log('🔍 CONTEXTO - Propiedades del primer indicador:', Object.keys(dataToUse[0] || {}));
-        if (dataToUse[0]?.hitos) {
-          console.log('🔍 CONTEXTO - Hitos del primer indicador:', dataToUse[0].hitos);
-          console.log('🔍 CONTEXTO - Es array de hitos?:', Array.isArray(dataToUse[0].hitos));
-          console.log('🔍 CONTEXTO - Cantidad de hitos:', dataToUse[0].hitos.length);
-          if (dataToUse[0].hitos.length > 0) {
-            console.log('🔍 CONTEXTO - Primer hito:', dataToUse[0].hitos[0]);
-            console.log('🔍 CONTEXTO - Propiedades del primer hito:', Object.keys(dataToUse[0].hitos[0] || {}));
-          }
-        }
-      }
-      
-      console.log('🔍 CONTEXTO - Antes de setIndicadores, dataToUse:', dataToUse);
-      console.log('🔍 CONTEXTO - dataToUse es array?:', Array.isArray(dataToUse));
-      console.log('🔍 CONTEXTO - dataToUse length:', dataToUse.length);
-      
       setIndicadores(dataToUse);
-      console.log('✅ CONTEXTO - setIndicadores ejecutado con:', dataToUse.length, 'elementos');
-      
-      // Verificar que se seteó correctamente
-      setTimeout(() => {
-        console.log('🔍 CONTEXTO - Verificación post-setState completada');
-      }, 100);
-      
       setError(null);
     } catch (err) {
-      console.error('❌ CONTEXTO - Error final al cargar los indicadores:', err);
+      console.error('Error al cargar los indicadores:', err);
       setError('Error al cargar los indicadores: ' + err.message);
       setIndicadores([]); // Asegurar que sea array vacío en caso de error
     } finally {
       setLoading(false);
-      console.log('🔍 CONTEXTO - Loading finalizado');
     }
   };
 
