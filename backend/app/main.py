@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from .auth import authenticate_user, create_access_token, Token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 from fastapi import status, HTTPException
+from .auth_ldap import authenticate_ldap_user, validate_corporate_email
 
 # Crear las tablas en la base de datos
 indicador.Base.metadata.create_all(bind=engine)
@@ -214,16 +215,39 @@ def get_config():
 
 @app.post("/api/auth/login", response_model=Token)
 async def login_tradicional(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Endpoint para login tradicional con email/contraseña"""
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
+    """Endpoint para login tradicional con credenciales corporativas"""
+    
+    email = form_data.username
+    password = form_data.password
+    
+    # Validar que sea email corporativo
+    if not validate_corporate_email(email):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email o contraseña incorrectos",
+            detail="Solo se permiten emails corporativos",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Autenticar contra Active Directory
+    try:
+        user_info = authenticate_ldap_user(email, password)
+    except HTTPException:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña corporativa incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Crear token JWT con información del usuario
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={
+            "sub": user_info["username"],
+            "email": user_info["email"],
+            "full_name": user_info["full_name"],
+            "department": user_info["department"]
+        }, 
+        expires_delta=access_token_expires
     )
+    
     return {"access_token": access_token, "token_type": "bearer"} 

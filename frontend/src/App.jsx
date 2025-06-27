@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -10,17 +10,6 @@ import GanttSyncfusion from '@/pages/GanttSyncfusion';
 import Login from '@/pages/Login';
 import Callback from '@/pages/Callback';
 import { IndicadoresProvider } from '@/context/IndicadoresContext';
-import { useIsAuthenticated } from '@azure/msal-react';
-
-function RequireAuth({ children }) {
-  const isAuthenticated = useIsAuthenticated();
-  const hasTraditionalToken = localStorage.getItem('access_token');
-  
-  if (!isAuthenticated && !hasTraditionalToken) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-}
 
 function App() {
   return (
@@ -29,11 +18,11 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/callback" element={<Callback />} />
-          <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/nuevo-indicador" element={<RequireAuth><NuevoIndicador /></RequireAuth>} />
-          <Route path="/actualizar-indicador" element={<RequireAuth><ActualizarIndicador /></RequireAuth>} />
-          <Route path="/historial" element={<RequireAuth><HistorialIndicadores /></RequireAuth>} />
-          <Route path="/gantt" element={<RequireAuth><GanttSyncfusion /></RequireAuth>} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/nuevo-indicador" element={<NuevoIndicador />} />
+          <Route path="/actualizar-indicador" element={<ActualizarIndicador />} />
+          <Route path="/historial" element={<HistorialIndicadores />} />
+          <Route path="/gantt" element={<GanttSyncfusion />} />
         </Routes>
       </Layout>
       <Toaster />

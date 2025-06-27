@@ -12,6 +12,7 @@ alembic==1.12.1
 pandas==2.1.3
 openpyxl==3.1.2
 requests
+ldap3
 
 # ✅ NUEVAS: Dependencias de seguridad
 slowapi==0.1.9                    # Rate limiting
