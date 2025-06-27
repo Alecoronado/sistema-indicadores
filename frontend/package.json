@@ -32,7 +32,7 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "@azure/msal-browser": "^2.38.2",
-    "@azure/msal-react": "^1.6.2"
+    "@azure/msal-react": "^1.5.12"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
