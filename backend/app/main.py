@@ -7,6 +7,10 @@ from .models import indicador
 import os
 import json
 from . import auth_azure
+from fastapi.security import OAuth2PasswordRequestForm
+from .auth import authenticate_user, create_access_token, Token, ACCESS_TOKEN_EXPIRE_MINUTES
+from datetime import timedelta
+from fastapi import status, HTTPException
 
 # Crear las tablas en la base de datos
 indicador.Base.metadata.create_all(bind=engine)
@@ -206,4 +210,20 @@ def get_config():
         "service_name": os.getenv("RAILWAY_SERVICE_NAME", "unknown"),
         "cors_from_env": bool(os.getenv("ALLOWED_ORIGINS")),
         "timestamp": "2025-01-18"
-    } 
+    }
+
+@app.post("/api/auth/login", response_model=Token)
+async def login_tradicional(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Endpoint para login tradicional con email/contraseña"""
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"} 

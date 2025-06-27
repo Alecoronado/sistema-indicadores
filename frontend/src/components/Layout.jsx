@@ -1,11 +1,16 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { BarChart3, PlusCircle, RefreshCw, ClipboardList, Menu, X, Calendar } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { BarChart3, PlusCircle, RefreshCw, ClipboardList, Menu, X, Calendar, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { instance } = useMsal();
+  const isAuthenticatedAzure = useIsAuthenticated();
+  const hasTraditionalToken = localStorage.getItem('access_token');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const navItems = [
@@ -15,6 +20,17 @@ const Layout = ({ children }) => {
     { path: '/gantt', label: 'Gantt', icon: <Calendar className="h-5 w-5" /> },
     { path: '/historial', label: 'Historial', icon: <ClipboardList className="h-5 w-5" /> },
   ];
+
+  const handleLogout = () => {
+    if (isAuthenticatedAzure) {
+      // Logout de Azure AD
+      instance.logoutRedirect();
+    } else {
+      // Logout tradicional
+      localStorage.removeItem('access_token');
+      navigate('/login');
+    }
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -55,6 +71,17 @@ const Layout = ({ children }) => {
                 <span>{item.label}</span>
               </Link>
             ))}
+            
+            {/* Botón de Logout */}
+            {(isAuthenticatedAzure || hasTraditionalToken) && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-1 px-3 py-2 rounded-md transition-colors hover:bg-white/10"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Salir</span>
+              </button>
+            )}
           </nav>
         </div>
       </header>

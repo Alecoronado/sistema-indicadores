@@ -14,7 +14,9 @@ import { useIsAuthenticated } from '@azure/msal-react';
 
 function RequireAuth({ children }) {
   const isAuthenticated = useIsAuthenticated();
-  if (!isAuthenticated) {
+  const hasTraditionalToken = localStorage.getItem('access_token');
+  
+  if (!isAuthenticated && !hasTraditionalToken) {
     return <Navigate to="/login" replace />;
   }
   return children;
