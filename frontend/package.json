@@ -30,7 +30,9 @@
     "react-router-dom": "^6.20.0",
     "recharts": "^2.15.3",
     "tailwind-merge": "^2.0.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@azure/msal-browser": "^2.38.2",
+    "@azure/msal-react": "^1.6.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",

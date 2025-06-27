@@ -60,11 +60,24 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import { PublicClientApplication } from '@azure/msal-browser';
+import { MsalProvider } from '@azure/msal-react';
+
+const msalConfig = {
+  auth: {
+    clientId: import.meta.env.VITE_AZURE_AD_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_AD_TENANT_ID}`,
+    redirectUri: window.location.origin,
+  },
+};
+const msalInstance = new PublicClientApplication(msalConfig);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <MsalProvider instance={msalInstance}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MsalProvider>
   </React.StrictMode>
 );

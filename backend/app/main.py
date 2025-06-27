@@ -6,6 +6,7 @@ from .database import engine
 from .models import indicador
 import os
 import json
+from . import auth_azure
 
 # Crear las tablas en la base de datos
 indicador.Base.metadata.create_all(bind=engine)
@@ -163,6 +164,7 @@ async def add_security_headers(request, call_next):
 
 # Incluir routers con prefijo /api
 app.include_router(indicadores.router, prefix="/api")
+app.include_router(auth_azure.router)
 
 @app.get("/")
 def read_root():

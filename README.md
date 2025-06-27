@@ -342,5 +342,29 @@ Para soporte técnico o preguntas:
 
 ---
 
+## 🔑 AUTENTICACIÓN CON AZURE AD
+
+El sistema soporta login corporativo con Microsoft Azure Active Directory (SSO):
+
+- El usuario inicia sesión con su cuenta Microsoft en la página de login.
+- El frontend usa MSAL para obtener el token de Azure AD.
+- El backend valida el token con las claves públicas de Azure y permite el acceso.
+
+### Variables de entorno necesarias
+
+**Frontend (.env):**
+```
+VITE_AZURE_AD_CLIENT_ID=tu-client-id
+VITE_AZURE_AD_TENANT_ID=tu-tenant-id
+```
+
+**Backend (.env):**
+```
+AZURE_AD_CLIENT_ID=tu-client-id
+AZURE_AD_TENANT_ID=tu-tenant-id
+```
+
+Ver ejemplo en `docs/env.production.example`.
+
 **🎉 ¡Horizons - Impulsando el éxito empresarial con datos!** 
  Añadir Loggin
